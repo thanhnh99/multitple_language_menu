@@ -11,10 +11,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Items {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id = UUID.randomUUID();
+public class Items extends BaseEntity{
     private String name;
     private BigDecimal price;
     private String description;

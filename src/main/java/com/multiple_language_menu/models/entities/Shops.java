@@ -13,9 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Shops extends BaseEntity{
-    @Id
-    @GeneratedValue
-    private UUID id = UUID.randomUUID();
+
     private String name;
     private String address;
     private String phone;

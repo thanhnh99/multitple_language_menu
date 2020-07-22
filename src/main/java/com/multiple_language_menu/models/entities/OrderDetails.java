@@ -11,10 +11,8 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderDetails {
-    @Id
-    @GeneratedValue
-    private UUID id = UUID.randomUUID();
+public class OrderDetails extends BaseEntity{
+
     @Column()
     private Integer quantity;
 

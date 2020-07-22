@@ -14,9 +14,8 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CategoriesTranslates {
-    @Id
-    private UUID id = UUID.randomUUID();
+public class CategoriesTranslates extends BaseEntity{
+
     private String languageCode;
     private String name;
     private String description;

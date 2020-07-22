@@ -10,9 +10,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 public class Languages extends BaseEntity{
-    @Id
-    @GeneratedValue
-    private UUID id = UUID.randomUUID();
     private String languageCode;
     private String name;
     private Integer rank;

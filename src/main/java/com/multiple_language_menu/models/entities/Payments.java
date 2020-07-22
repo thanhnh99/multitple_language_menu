@@ -9,11 +9,8 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Payments {
+public class Payments extends BaseEntity{
 
-    @Id
-    @GeneratedValue
-    private UUID id = UUID.randomUUID();
     private String name;
     private String code;
 

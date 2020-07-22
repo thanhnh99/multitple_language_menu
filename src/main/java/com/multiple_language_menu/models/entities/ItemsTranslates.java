@@ -14,10 +14,8 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ItemsTranslates {
+public class ItemsTranslates extends BaseEntity{
 
-    @Id
-    private UUID id = UUID.randomUUID();
     private String languageCode;
     private String name;
     private String description;

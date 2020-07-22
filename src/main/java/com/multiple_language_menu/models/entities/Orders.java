@@ -10,11 +10,8 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Orders {
+public class Orders extends BaseEntity{
 
-    @Id
-    @GeneratedValue
-    private UUID id = UUID.randomUUID();
     private String name;
 
     @ManyToOne

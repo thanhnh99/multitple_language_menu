@@ -11,10 +11,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Categories {
-    @Id
-    @GeneratedValue
-    private UUID id = UUID.randomUUID();
+public class Categories extends BaseEntity{
     private String name;
     private String description;
 

@@ -14,9 +14,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Logs extends BaseEntity{
-    @Id
-    @GeneratedValue
-    private UUID id = UUID.randomUUID();
     private String target;
     private ETargetType targetType ;
     private String action;
