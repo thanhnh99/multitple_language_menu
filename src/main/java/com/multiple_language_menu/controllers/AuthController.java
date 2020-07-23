@@ -28,7 +28,7 @@ public class AuthController {
         {
             response.setStatusCode("200");
             response.setMessage("success");
-            response.addData(authService.login(request));
+            response.setData(authService.login(request));
             return ResponseEntity.ok(response);
         }
         response.setStatusCode("400");

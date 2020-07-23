@@ -19,7 +19,11 @@ import javax.sql.DataSource;
 
 @Configuration
 @EnableWebSecurity
-//@EnableGlobalMethodSecurity(prePostEnabled = true)
+//@EnableGlobalMethodSecurity(
+//        prePostEnabled = true,
+//        securedEnabled = true,
+//        jsr250Enabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private DataSourceConfig dataSource;
@@ -30,7 +34,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-//                .antMatchers(HttpMethod.GET,"").permitAll()
                 .antMatchers(HttpMethod.POST, "/login").permitAll()
                 .anyRequest().authenticated()
                 .and()
@@ -40,13 +43,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 // disable page caching
                 .headers().cacheControl();
     }
-    @Autowired
-    public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
-        auth.jdbcAuthentication().dataSource(dataSource.dataSource())
-                .usersByUsernameQuery("select name,password,active from users where username=?")
-                .authoritiesByUsernameQuery("select roles.name from roles inner join user_role on roles.id = user_role.role_id" +
-                        " inner join users on user_role.user_id = users.id where users.username=?")
-                .passwordEncoder(new BCryptPasswordEncoder());
-    }
+//    @Autowired
+//    public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
+//        auth.jdbcAuthentication().dataSource(dataSource.dataSource())
+//                .usersByUsernameQuery("select username,password,enable from users where username=?")
+//                .authoritiesByUsernameQuery("select username,  roles.name from roles inner join user_role on roles.id = user_role.role_id" +
+//                        " inner join users on user_role.user_id = users.id where users.username=?")
+//                .passwordEncoder(new BCryptPasswordEncoder());
+//    }
 
 }

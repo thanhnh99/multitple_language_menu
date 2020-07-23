@@ -25,9 +25,9 @@ public class AuthService {
                 ArrayList<String> roles = new ArrayList<>();
                 for(Roles role : user.getRoles())
                 {
-                    roles.add(role.getName());
+                    roles.add(role.getCode());
                 }
-                String token = TokenJwtUtil.generateJwt(reqLogin);
+                String token = TokenJwtUtil.generateJwt(reqLogin, roles);
                 ResLogin response = new ResLogin();
                 response.setRole(roles);
                 response.setToken(token);

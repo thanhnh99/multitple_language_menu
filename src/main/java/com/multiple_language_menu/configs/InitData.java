@@ -34,7 +34,38 @@ public class InitData {
             }
 
         }
+        if (roleRepository.findByCode("admin") == null)
+        {
+            try {
+                Roles role = new Roles("ADMIN","admin");
+                roleRepository.save(role);
+            } catch (Exception e)
+            {
+                System.out.println("ERR: " + e.getMessage());
+            }
+
+        }
     }
+    @Bean
+    public void addAdmin()
+    {
+        if(userRepository.findByEmail("admin@gmail.com") == null)
+        {
+            try {
+                Roles role = roleRepository.findByCode("admin");
+                Users rootUser = new Users("adminname","adminpass","admin@gmail.com", new Boolean(true));
+                rootUser.addRole(role);
+                userRepository.save(rootUser);
+//                role.addUser(rootUser);
+//                roleRepository.save(role);
+            } catch (Exception e)
+            {
+                System.out.println("ERR: " + e.getMessage());
+            }
+
+        }
+    }
+
 
     @Bean
     public void addRoot()
@@ -43,7 +74,7 @@ public class InitData {
         {
             try {
                 Roles role = roleRepository.findByCode("root");
-                Users rootUser = new Users("root","root","root@gmail.com", new Boolean(true));
+                Users rootUser = new Users("rootname","rootpass","root@gmail.com", new Boolean(true));
                 rootUser.addRole(role);
                 userRepository.save(rootUser);
 //                role.addUser(rootUser);

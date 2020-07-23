@@ -12,9 +12,5 @@ import java.util.Collection;
 public class HttpResponse<T>{
     private String statusCode;
     private String message;
-    private Collection<T> data = new ArrayList<T>();
-    public void addData( T data )
-    {
-        this.data.add(data);
-    }
+    private T data;
 }
