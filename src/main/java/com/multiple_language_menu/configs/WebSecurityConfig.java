@@ -47,8 +47,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //    public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
 //        auth.jdbcAuthentication().dataSource(dataSource.dataSource())
 //                .usersByUsernameQuery("select username,password,enable from users where username=?")
-//                .authoritiesByUsernameQuery("select username,  roles.name from roles inner join user_role on roles.id = user_role.role_id" +
-//                        " inner join users on user_role.user_id = users.id where users.username=?")
+//                .authoritiesByUsernameQuery("select users.username,  roles.name from roles inner join user_role on roles.id = user_role.role_id" +
+//                        " inner join users on user_role.user_id = users.id where users.username=?");
 //                .passwordEncoder(new BCryptPasswordEncoder());
 //    }
 

@@ -27,7 +27,7 @@ public class JWTFilter extends GenericFilterBean {//Bắt JWT trong header và t
                 ((HttpServletResponse) servletResponse).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 servletResponse.setContentType("application/json");
                 servletResponse.setCharacterEncoding("UTF-8");
-                HttpResponse response = new HttpResponse();
+                HttpResponse<Object> response = new HttpResponse();
                 response.setStatusCode("401");
                 response.setMessage("Unauthorized");
                 response.setData(null);
