@@ -1,24 +1,15 @@
 package com.multiple_language_menu.filters;
 
-import com.multiple_language_menu.models.entities.Users;
 import com.multiple_language_menu.models.request.ReqLogin;
-import com.multiple_language_menu.repositories.IUserRepository;
-import com.multiple_language_menu.services.AttributeTokenService;
-import io.jsonwebtoken.Claims;
+import com.multiple_language_menu.services.authorize.AttributeTokenService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.util.AutoPopulatingList;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
-
-import static java.util.Collections.emptyList;
 public class TokenJwtUtil {
     static final long EXPIRATIONTIME = 86_400_000; // 1 day
     public static final String SECRET = "SecretKey";
