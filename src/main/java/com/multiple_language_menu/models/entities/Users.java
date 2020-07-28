@@ -22,7 +22,7 @@ public class Users extends BaseEntity{
     private String email;
     private Boolean enable = true;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_role",
             joinColumns =  @JoinColumn(name = "user_id"),
@@ -31,7 +31,7 @@ public class Users extends BaseEntity{
     @ToString.Exclude
     private Collection<Roles> roles = new ArrayList<>();
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "owner")
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Collection<Shops> shops;

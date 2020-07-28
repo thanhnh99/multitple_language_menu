@@ -13,8 +13,8 @@ import java.util.UUID;
 @Data
 public abstract class BaseEntity {
     @Id
-    @GeneratedValue(generator = "uuid")
-    @GenericGenerator(name = "uuid", strategy = "uuid2")
+//    @GeneratedValue(generator = "uuid")
+//    @GenericGenerator(name = "uuid", strategy = "uuid2")
     private String id = UUID.randomUUID().toString();
     private Date created_at = new Date();
     private String created_by;

@@ -16,8 +16,14 @@ public class Categories extends BaseEntity{
     private String description;
 
     @OneToOne
-    @JoinColumn(name = "parent_id")
+    @JoinColumn(name = "parent_id", nullable = true)
     private Categories categoriesParent;
+
+    @ManyToOne
+    @JoinColumn(name = "shop_id")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Shops shop;
 
     @OneToMany(mappedBy = "category")
     @EqualsAndHashCode.Exclude

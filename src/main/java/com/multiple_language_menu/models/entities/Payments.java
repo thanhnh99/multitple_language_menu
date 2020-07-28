@@ -3,7 +3,8 @@ package com.multiple_language_menu.models.entities;
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -14,9 +15,17 @@ public class Payments extends BaseEntity{
     private String name;
     private String code;
 
-    @ManyToOne
-    @JoinColumn(name = "shop_id")
-    @EqualsAndHashCode.Exclude
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "payment_shop",
+            joinColumns =  @JoinColumn(name = "payment_id"),
+            inverseJoinColumns = @JoinColumn(name = "shop_id")
+    )
     @ToString.Exclude
-    private Shops shop;
+    private List<Shops> shops = new ArrayList<>();
+
+    public void addShop(Shops shops)
+    {
+        this.shops.add(shops);
+    }
 }
