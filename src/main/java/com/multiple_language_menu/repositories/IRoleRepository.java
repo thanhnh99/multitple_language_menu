@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface IRoleRepository extends JpaRepository<Roles, UUID> {
+public interface IRoleRepository extends JpaRepository<Roles, String> {
     Roles findByCode(String code);
 }
