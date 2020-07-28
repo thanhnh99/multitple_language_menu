@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResShop {
+    private String shopId;
     private String ownerName;
     private String ownerPassword;
     private String ownerEmail;
@@ -34,6 +35,7 @@ public class ResShop {
     {
         //TODO: convert shopEntity -> ResShop
         //Done
+        this.shopId = shop.getId();
         this.ownerName = shop.getOwner().getUsername();
         this.ownerPassword = shop.getOwner().getPassword();
         this.ownerEmail = shop.getOwner().getEmail();
