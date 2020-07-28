@@ -41,9 +41,10 @@ public class UserService {
         try {
             String userRequestName = AttributeTokenService.getUsernameFromToken(token);
             Users requestUser = userRepository.findByUsername(userRequestName);
-            boolean check = AttributeTokenService.checkAccess(token,"admin");
+            boolean check = AttributeTokenService.checkAccess(token,"admin") || AttributeTokenService.checkAccess(token,"root");
             boolean checkuserexist = this.checkUserExisted(requestData.getUserName());
-            if(AttributeTokenService.checkAccess(token,"admin") &&
+            if((AttributeTokenService.checkAccess(token,"admin") ||
+                    AttributeTokenService.checkAccess(token,"root")) &&
                     !this.checkUserExisted(requestData.getUserName()))
             {
                 Roles role = roleRepository.findByCode("manager");
@@ -51,7 +52,7 @@ public class UserService {
                         requestData.getPassword(),
                         requestData.getEmail(),
                         true);
-                manager.setCreated_by(requestUser.getId());
+                manager.setCreatedBy(requestUser.getId());
                 manager.addRole(role);
                 userRepository.save(manager);
                 return manager;
@@ -81,7 +82,7 @@ public class UserService {
                         requestData.getPassword(),
                         requestData.getEmail(),
                         true);
-                admin.setCreated_by(requestUser.getId());
+                admin.setCreatedBy(requestUser.getId());
                 admin.addRole(role);
                 userRepository.save(admin);
                 return admin;
