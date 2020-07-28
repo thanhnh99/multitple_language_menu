@@ -27,8 +27,9 @@ public class AppAuthorizerImpl implements IAppAuthorizer {
 //        String menuCode = securedPath.substring(1);//Bỏ dấu "/" ở đầu Path
         for (String role : roles)
         {
-            System.out.println(role);
+            System.out.print(role + " - ");
         }
+        System.out.println(" only proceed this task!!!!!");
         boolean isAllow = false;
         try {
             UsernamePasswordAuthenticationToken user = (UsernamePasswordAuthenticationToken) authentication;
@@ -48,7 +49,7 @@ public class AppAuthorizerImpl implements IAppAuthorizer {
                 {
                     for (String role : roles)
                     {
-                        if(roleEntity.getName().equals(role))
+                        if(roleEntity.getCode().equals(role))
                         {
                             isAllow = true;
                             break;
