@@ -17,6 +17,7 @@ public class Shops extends BaseEntity{
     private String address;
     private String phone;
     private String openTime;
+    private String closeTime;
     private String website;
     private Boolean wifi;
     private Integer parkingScale;

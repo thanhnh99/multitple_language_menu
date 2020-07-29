@@ -21,6 +21,6 @@ public class Languages extends BaseEntity{
     @ToString.Exclude
     private Shops shop;
 
-    public Languages(String language, String language1, Integer rank, Optional<Shops> shop) {
+    public Languages(String languageName, String languageCode, Integer rank, Optional<Shops> shop) {
     }
 }

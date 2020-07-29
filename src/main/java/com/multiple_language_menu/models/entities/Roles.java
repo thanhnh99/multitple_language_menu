@@ -19,7 +19,7 @@ public class Roles extends BaseEntity{
     @Column(unique = true)
     private String code;
 
-    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
     @ToString.Exclude
     private Collection<Users> users = new ArrayList<Users>();
 
