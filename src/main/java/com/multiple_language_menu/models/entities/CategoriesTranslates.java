@@ -1,13 +1,11 @@
 package com.multiple_language_menu.models.entities;
 
-import com.multiple_language_menu.models.request.ReqTransCategory;
-import com.multiple_language_menu.models.request.ReqTranslateItem;
+import com.multiple_language_menu.models.request.ReqTranslateCategory;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.util.UUID;
 
 @Entity
 @Data
@@ -24,7 +22,7 @@ public class CategoriesTranslates extends BaseEntity{
     @JoinColumn(name = "category_id")
     private Categories category;
 
-    public CategoriesTranslates(ReqTransCategory requestData)
+    public CategoriesTranslates(ReqTranslateCategory requestData)
     {
         this.languageCode = requestData.getLanguageCode();
         this.name = requestData.getName();
