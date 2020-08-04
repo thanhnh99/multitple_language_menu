@@ -34,25 +34,25 @@ public class LanguageService {
     public void addLanguage(String shopId)
     {
         try {
-            Optional<Shops> shop = shopRepository.findById(shopId);
+            Shops shop = shopRepository.findById(shopId).get();
             if(shop != null)
             {
                 Integer rank = getLanguages().size();
-                for (String language: LanguageConstant.languageCode())
+                for (String languageCode: LanguageConstant.languageCode())
                 {
-                    if(languageRepository.findByCode(language) == null)
+                    if(languageRepository.findByCode(languageCode) == null)
                     {
-                        Languages languageEntity = new Languages(language,
-                                language,
-                                ++rank,
-                                shop);
+                        Languages languageEntity = new Languages(languageCode,
+                                                                languageCode,
+                                                                ++rank,
+                                                                shop);
                         languageRepository.save(languageEntity);
                     }
                 }
             }
         } catch (Exception e)
         {
-            System.out.println("Err in LanguageService.getLanguage: " + e.getMessage());
+            System.out.println("Err in LanguageService.addLanguage: " + e.getMessage());
             return;
         }
     }
