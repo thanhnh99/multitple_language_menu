@@ -77,7 +77,6 @@ public class ShopService {
                             requestData.getCoverImage(),
                             requestData.getDescription(),
                             requestData.getContractTerm(),
-                            true,
                             manager,
                             new ArrayList<>(),
                             new ArrayList<>(),
