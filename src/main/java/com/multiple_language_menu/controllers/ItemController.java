@@ -22,7 +22,6 @@ public class ItemController {
     @PostMapping
     @PreAuthorize("@appAuthorizer.authorize(authentication, {'manager'})")
     public ResponseEntity<HttpResponse> createItem(HttpServletRequest httpServletRequest,
-                                                 @PathVariable String itemId,
                                                  @RequestBody ReqCreateItem requestData)
     {
         HttpResponse response = new HttpResponse();
