@@ -4,13 +4,13 @@ import com.multiple_language_menu.models.entities.Categories;
 import lombok.Data;
 
 @Data
-public class ReqTransCategory {
+public class ReqTranslateCategory {
     private String languageCode;
     private String categoryId;
     private String name;
     private String description;
 
-    public ReqTransCategory(Categories requestData)
+    public ReqTranslateCategory(Categories requestData)
     {
         this.categoryId = requestData.getId();
         this.name = requestData.getName();
