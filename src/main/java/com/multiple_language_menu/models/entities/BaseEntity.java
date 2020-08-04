@@ -16,7 +16,7 @@ public abstract class BaseEntity {
 //    @GeneratedValue(generator = "uuid")
 //    @GenericGenerator(name = "uuid", strategy = "uuid2")
     private String id = UUID.randomUUID().toString();
-    private Date createdAT = new Date();
+    private Date createdAt = new Date();
     private String createdBy;
     private Date updatedAt = new Date();
     private String updatedBy;
