@@ -93,7 +93,7 @@ public class CategoryService {
             //Update
             if(requestData.getCategoryIds() instanceof  List) //update rank
             {
-                //Todo update Rank
+                // update Rank
                 for (String categoryUpdateId : (List<String>) requestData.getCategoryIds())
                 {
                     Categories categoryUpdate = categoryRepository.findById(categoryUpdateId).get();
@@ -130,7 +130,8 @@ public class CategoryService {
                         updateCategory.setRank(childCategories.size());
                     }
                     categoryRepository.save(updateCategory);
-                    //Todo update translate data.
+                    // update translate data.
+                    translateProcess.translateCategory(updateCategory, categoryTranslateRepository);
                     return true;
                 }
                 else
@@ -201,33 +202,52 @@ public class CategoryService {
 
     public List<ResCategory> getCategories(HttpServletRequest httpRequest)
     {
-        String page = httpRequest.getParameter("page");
-        String pagesize = httpRequest.getParameter("pagesize");
-        String shopId = httpRequest.getParameter("shop_id");
-        Shops shop = shopRepository.getOne(shopId);
-        if(shop == null || !shop.getOwner().getEnable())
+        try {
+            String shopId = httpRequest.getParameter("shop_id");
+            Shops shop = shopRepository.findById(shopId).get();
+            if(shop == null || !shop.getOwner().getEnable())
+            {
+                return null;
+            }
+            String languageCode = httpRequest.getParameter("language_code");
+            if(shopId == null)
+            {
+                return null;
+            }
+            List<ResCategory> responses = new ArrayList<ResCategory>();
+            if(languageCode == null)
+            {
+                List<Categories> categories = categoryRepository.findCategoriesByShop(shop);
+                for(Categories category : categories)
+                {
+                    if(category.getCategoriesParent() == null)
+                    {
+                        ResCategory resCategory = new ResCategory(category);
+                        responses.add(resCategory);
+                    }
+                }
+
+            }
+            else
+            {
+                List<Categories> categories = categoryRepository.findCategoriesByShop(shop);
+                for(Categories category : categories)
+                {
+                    if(category.getCategoriesParent() == null)
+                    {
+                        CategoriesTranslates categoriesTranslates = categoryTranslateRepository.findByCategoryAndLanguageCode(category,languageCode);
+                        ResCategory resCategory = new ResCategory(categoriesTranslates);
+                        responses.add(resCategory);
+                    }
+                }
+
+            }
+            return responses;
+        } catch (Exception e)
         {
+            System.out.println("Err in CategoryService.getCategories: " + e.getMessage());
             return null;
         }
-        String languageCode = httpRequest.getParameter("language_code");
-        if(page== null || pagesize== null || shopId == null)
-        {
-            return null;
-        }
-        int pageInt = Integer.parseInt(page);
-        int pagesizeInt = Integer.parseInt(pagesize);
-        if(languageCode == null)
-        {
-            //Todo: get from category
-//            List<Categories> categories = categoryRepository.findCategoriesByShop(sho)
-        }
-        else
-        {
-            //Todo: get from category translate;
-
-
-        }
-        return null;
     }
 
     public List<Object> getChildByCategoryId(String categoryId, String languageCode)

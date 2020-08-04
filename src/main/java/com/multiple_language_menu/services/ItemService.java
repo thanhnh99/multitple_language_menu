@@ -52,7 +52,6 @@ public class ItemService {
                 newItem.setCategory(category);
                 newItem.setRank(category.getItems().size());
                 itemRepository.save(newItem);
-                //Todo translate schedule
                 translateProcess.translateItem(newItem, itemTranslateRepository);
                 return true;
             }
@@ -65,60 +64,55 @@ public class ItemService {
     }
 
 
-    public Boolean editItem(HttpServletRequest httpRequest, ReqEditItem requestData)
-    {
+    public Boolean editItem(HttpServletRequest httpRequest, ReqEditItem requestData) {
         try {
-            String itemId = new String();//
-            if(requestData.getItemIds() instanceof  List)
-            {
-                //Todo update Rank
-            }
-            else if(requestData.getItemIds() instanceof String)
-            {
-                //
-            }
-            Items  item = itemRepository.findById(itemId).get();
-            if(item == null || !item.getCategory().getShop().getOwner().getEnable())
-            {
+            String token = httpRequest.getHeader("Authorization");
+            Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
+            if (requestData.getItemIds() instanceof List) {
+                //update Rank
+                for (String itemUpdateId : (List<String>) requestData.getItemIds()) {
+                    Items itemUpdate = itemRepository.findById(itemUpdateId).get();
+                    if (!AttributeTokenService.checkAccess(token, "root")
+                            || !(AttributeTokenService.checkAccess(token, "manager") &&
+                            user.getId().equals(itemUpdate.getCategory().getShop().getOwner().getId()))) {
+                        return false;
+                    }
+                }
+                int index = 1;
+                for (String itemUpdateId : (List<String>) requestData.getItemIds()) {
+                    Items itemUpdate = itemRepository.findById(itemUpdateId).get();
+                    itemUpdate.setRank(index++);
+                    itemRepository.save(itemUpdate);
+                }
+            } else if (requestData.getItemIds() instanceof String) {
+                //update data
+                Items updateItem = itemRepository.findById((String) requestData.getItemIds()).get();
+                if (AttributeTokenService.checkAccess(token, "root")
+                        || (AttributeTokenService.checkAccess(token, "manager") &&
+                        user.getId().equals(updateItem.getCategory().getShop().getOwner().getId()))) {
+                    updateItem.setName(requestData.getItemName());
+                    updateItem.setDescription(requestData.getDescription());
+                    if (!requestData.getCategoryId().equals(updateItem.getCategory().getId())) {
+                        Categories toCategory = categoryRepository.findById(requestData.getCategoryId()).get();
+                        List<Categories> childCategories = categoryRepository.findCategoriesByCategoriesParent(toCategory);
+                        if (toCategory != null && childCategories.size() < 1) {
+                            updateItem.setCategory(toCategory);
+                        }
+                    }
+                    itemRepository.save(updateItem);
+                    // update translate data.
+                    translateProcess.translateItem(updateItem, itemTranslateRepository);
+                    return true;
+                }
                 return false;
             }
-            //check Access
-            String token = httpRequest.getHeader("Authorization");
-            Boolean checkAccess = false;
-            Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
-            if(AttributeTokenService.checkAccess(token,"root"))
-            {
-                checkAccess = true;
-            }
-            else if(AttributeTokenService.checkAccess(token,"admin"))
-            {
-                //check CreateBY
-                if(user.getId().equals(item.getCategory().getShop().getCreatedBy()))
-                {
-                    checkAccess = true;
-                }
-            }
-            else if(AttributeTokenService.checkAccess(token,"manager"))
-            {
-                //check ownerId
-                if(user.getId().equals(item.getCategory().getShop().getOwner().getId()))
-                {
-                    checkAccess = true;
-                }
-            }
-
-            if(checkAccess == true)
-            {
-                //Todo update logic
-                return true;
-            }
-
-            return false;
-        } catch (Exception e)
+        }catch (Exception e)
         {
             System.out.println("Err in CategoryService.deleteCategory: " + e.getMessage());
             return false;
-        }    }
+        }
+        return false;
+    }
 
     public Boolean deleteItem(HttpServletRequest httpRequest, String itemId)
     {
