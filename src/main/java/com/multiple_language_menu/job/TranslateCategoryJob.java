@@ -4,15 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.multiple_language_menu.models.entities.Categories;
 import com.multiple_language_menu.models.entities.CategoriesTranslates;
-import com.multiple_language_menu.models.entities.ItemsTranslates;
-import com.multiple_language_menu.models.request.ReqTransCategory;
-import com.multiple_language_menu.models.request.ReqTranslateItem;
+import com.multiple_language_menu.models.request.ReqTranslateCategory;
 import com.multiple_language_menu.repositories.ICategoryTranslateRepository;
-import lombok.SneakyThrows;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -26,18 +22,28 @@ public class TranslateCategoryJob implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         System.out.println("Execute Translate category");
         Categories requestData = (Categories) context.getJobDetail().getJobDataMap().get("data");
-        ReqTransCategory reqTransCategory = new ReqTransCategory(requestData);
         ICategoryTranslateRepository categoryTranslateRepository = (ICategoryTranslateRepository) context.getJobDetail().getJobDataMap().get("category");
         List<String> languageCodes = (List<String>) context.getJobDetail().getJobDataMap().get("languageCode");
         for(String languageCode : languageCodes)
         {
-            reqTransCategory.setName(this.translate(reqTransCategory.getName(), languageCode));
-            reqTransCategory.setDescription(this.translate(requestData.getDescription(),languageCode));
+            ReqTranslateCategory reqTranslateCategory = new ReqTranslateCategory(requestData);
+            reqTranslateCategory.setName(this.translate(reqTranslateCategory.getName(), languageCode));
+            reqTranslateCategory.setDescription(this.translate(requestData.getDescription(),languageCode));
             try {
-                CategoriesTranslates categoriesTranslate = new CategoriesTranslates(reqTransCategory);
-                categoriesTranslate.setCategory(requestData);
-                categoriesTranslate.setLanguageCode(languageCode);
-                categoryTranslateRepository.save(categoriesTranslate);
+                CategoriesTranslates categoriesTranslate = categoryTranslateRepository.findByCategoryAndLanguageCode(requestData,languageCode);
+                if(categoriesTranslate != null)
+                {
+                    categoriesTranslate.setName(reqTranslateCategory.getName());
+                    reqTranslateCategory.setDescription(reqTranslateCategory.getDescription());
+                    categoryTranslateRepository.save(categoriesTranslate);
+                }
+                else
+                {
+                    CategoriesTranslates newCategoriesTranslate = new CategoriesTranslates(reqTranslateCategory);
+                    newCategoriesTranslate.setCategory(requestData);
+                    newCategoriesTranslate.setLanguageCode(languageCode);
+                    categoryTranslateRepository.save(newCategoriesTranslate);
+                }
             } catch (Exception e)
             {
                 System.out.println("Err in TranslateCategory.excute: " + e.getMessage());

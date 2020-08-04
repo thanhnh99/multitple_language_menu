@@ -25,12 +25,22 @@ public class TranslateItemJob implements Job {
         for(String languageCode : languageCodes)
         {
             reqTranslateItem.setItemName(this.translate(reqTranslateItem.getItemName(), languageCode));
-            requestData.setDescription(this.translate(requestData.getDescription(),languageCode));
+            reqTranslateItem.setDescription(this.translate(reqTranslateItem.getDescription(),languageCode));
             try {
-                ItemsTranslates itemsTranslates = new ItemsTranslates(reqTranslateItem);
-                itemsTranslates.setItem(requestData);
-                itemsTranslates.setLanguageCode(languageCode);
-                itemTranslateRepository.save(itemsTranslates);
+                ItemsTranslates itemsTranslate = itemTranslateRepository.findByItemAndLanguageCode(requestData, languageCode);
+                if(itemsTranslate != null)
+                {
+                    itemsTranslate.setName(reqTranslateItem.getItemName());
+                    itemsTranslate.setDescription(reqTranslateItem.getDescription());
+                    itemTranslateRepository.save(itemsTranslate);
+                }
+                else {
+                    ItemsTranslates newItemsTranslate = new ItemsTranslates(reqTranslateItem);
+                    newItemsTranslate.setItem(requestData);
+                    newItemsTranslate.setLanguageCode(languageCode);
+                    itemTranslateRepository.save(newItemsTranslate);
+                }
+
             } catch (Exception e)
             {
                 System.out.println("Err in TranslateItem.execute: " + e.getMessage());
