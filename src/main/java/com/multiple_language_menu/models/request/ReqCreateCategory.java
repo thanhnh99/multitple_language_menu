@@ -8,8 +8,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReqCreateCategory {
+    private String ShopId;
     private String parentCategory;
     private String categoryName;
-    private String descripton;
+    private String description;
 
 }

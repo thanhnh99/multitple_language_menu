@@ -17,10 +17,7 @@ public class Languages extends BaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "shop_id")
-    @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Shops shop;
 
-    public Languages(String languageName, String languageCode, Integer rank, Optional<Shops> shop) {
-    }
 }
