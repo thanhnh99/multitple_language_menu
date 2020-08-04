@@ -9,6 +9,7 @@ public class LanguageConstant {
         List<String> languageCodes = new ArrayList<String>();
         languageCodes.add("vi");
         languageCodes.add("en");
+        languageCodes.add("ja");
         return languageCodes;
     }
 }
