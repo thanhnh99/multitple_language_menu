@@ -5,9 +5,9 @@ import com.multiple_language_menu.models.entities.Shops;
 import com.multiple_language_menu.models.entities.Users;
 import com.multiple_language_menu.models.request.ReqCreateAdmin;
 import com.multiple_language_menu.models.request.ReqCreateShop;
-import com.multiple_language_menu.models.request.ReqEditCategory;
 import com.multiple_language_menu.models.request.ReqEditShop;
 import com.multiple_language_menu.models.responses.dataResponse.ResShop;
+import com.multiple_language_menu.models.responses.dataResponse.ResShopUser;
 import com.multiple_language_menu.repositories.IPaymentRepository;
 import com.multiple_language_menu.repositories.IShopRepository;
 import com.multiple_language_menu.repositories.IUserRepository;
@@ -15,20 +15,13 @@ import com.multiple_language_menu.services.authorize.AttributeTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PathVariable;
-
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class ShopService {
@@ -84,6 +77,7 @@ public class ShopService {
                             requestData.getCoverImage(),
                             requestData.getDescription(),
                             requestData.getContractTerm(),
+                            true,
                             manager,
                             new ArrayList<>(),
                             new ArrayList<>(),
@@ -117,8 +111,6 @@ public class ShopService {
 
     public List<ResShop> getShops(HttpServletRequest httpRequest)
     {
-        //TODO: getShop logic
-        //Done
         try {
             String page = httpRequest.getParameter("page");
             String pagesize = httpRequest.getParameter("pagesize");
@@ -257,7 +249,7 @@ public class ShopService {
                              String shopId) throws ParseException {
         try {
             Shops  shop = shopRepository.getOne(shopId);
-            if(shop == null)
+            if(shop == null || !shop.getOwner().getEnable())
             {
                 return false;
             }
@@ -344,7 +336,7 @@ public class ShopService {
                               String shopId)
     {
         try {
-//            checkShop exist
+//          checkShop exist
             Shops  shop = shopRepository.getOne(shopId);
             if(shop == null)
             {
@@ -388,6 +380,38 @@ public class ShopService {
     public Object getShopById(HttpServletRequest httpRequest,
                                String shopId)
     {
-        //checkAce
+        try {
+            //checkShop exist
+            Shops  shop = shopRepository.findById(shopId).get();
+            if(shop == null || !shop.getOwner().getEnable())
+            {
+                return null;
+            }
+            //check Access
+            String token = httpRequest.getHeader("Authorization");
+            if(token == null)
+            {
+                ResShopUser response = new ResShopUser(shop);
+                return response;
+            }
+            else
+            {
+                Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
+                if(AttributeTokenService.checkAccess(token,"root")||
+                    (AttributeTokenService.checkAccess(token,"admin")
+                            &&user.getId().equals(shop.getCreatedBy())) ||
+                    (AttributeTokenService.checkAccess(token,"manager")
+                            &&user.getId().equals(shop.getOwner().getId())))
+                {
+                    ResShop response = new ResShop(shop);
+                    return response;
+                }
+                return null;
+            }
+        } catch (Exception e)
+        {
+            System.out.println("Err in ShopService.getShopById: " + e.getMessage());
+            return null;
+        }
     }
 }

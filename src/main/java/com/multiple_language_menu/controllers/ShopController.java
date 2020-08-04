@@ -22,6 +22,7 @@ public class ShopController {
 
     @PostMapping()
     @PreAuthorize("@appAuthorizer.authorize(authentication, {'root', 'admin'})")
+//    "@appAuthorizer.checkEnable(true)")
     public ResponseEntity<HttpResponse> addShop(HttpServletRequest httpRequest, @RequestBody ReqCreateShop requestData)
     {
         HttpResponse<ResShop> response = new HttpResponse();
@@ -42,8 +43,8 @@ public class ShopController {
     @GetMapping()
     @PreAuthorize("@appAuthorizer.authorize(authentication, {'root', 'admin', 'manager'})")
     public ResponseEntity<HttpResponse> getShops(HttpServletRequest httpRequest,
-                                                 @RequestParam(required = false) String page,
-                                                 @RequestParam(required = false) String pagesize,
+                                                 @RequestParam(required = true) String page,
+                                                 @RequestParam(required = true) String pagesize,
                                                  @RequestParam(required = false) String startDate,
                                                  @RequestParam(required = false) String endDate)
     {
@@ -92,6 +93,24 @@ public class ShopController {
         {
             response.setStatusCode("200");
             response.setMessage("success");
+            return ResponseEntity.ok(response);
+        }
+        response.setStatusCode("400");
+        response.setMessage("bad request");
+        return ResponseEntity.status(400).body(response);
+    }
+
+    @GetMapping("{shopId}")
+    public ResponseEntity<HttpResponse> getShopById(HttpServletRequest httpRequest,
+                                                   @PathVariable String shopId)
+    {
+        HttpResponse<Object> response = new HttpResponse();
+        Object responseData = shopService.getShopById(httpRequest ,shopId);
+        if(responseData != null)
+        {
+            response.setStatusCode("200");
+            response.setMessage("success");
+            response.setData(responseData);
             return ResponseEntity.ok(response);
         }
         response.setStatusCode("400");
