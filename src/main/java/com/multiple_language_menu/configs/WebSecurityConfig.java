@@ -30,18 +30,29 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
+//        httpSecurity
+//                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                .and()
+//                .authorizeRequests()
+//                .antMatchers(HttpMethod.POST, "/login").permitAll()
+//                .anyRequest().authenticated()
+//                .and()
+//                .addFilterBefore(new JWTFilter(), UsernamePasswordAuthenticationFilter.class)
+//                .csrf().disable()
+//                .cors().disable()
+//                // disable page caching
+//                .headers().cacheControl();
         httpSecurity
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
                 .authorizeRequests()
-                .antMatchers(HttpMethod.POST, "/login").permitAll()
+                .antMatchers( "/login").permitAll()
                 .anyRequest().authenticated()
                 .and()
-                .addFilterBefore(new JWTFilter(), UsernamePasswordAuthenticationFilter.class)
                 .csrf().disable()
                 .cors().disable()
                 // disable page caching
                 .headers().cacheControl();
+        httpSecurity
+                .addFilterBefore(new JWTFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 //    @Autowired
 //    public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
