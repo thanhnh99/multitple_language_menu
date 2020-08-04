@@ -7,11 +7,13 @@ import com.multiple_language_menu.models.request.ReqCreateShop;
 import com.multiple_language_menu.repositories.IRoleRepository;
 import com.multiple_language_menu.repositories.IUserRepository;
 import com.multiple_language_menu.services.authorize.AttributeTokenService;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 
 @Service
 public class UserService {
@@ -41,11 +43,9 @@ public class UserService {
         try {
             String userRequestName = AttributeTokenService.getUsernameFromToken(token);
             Users requestUser = userRepository.findByUsername(userRequestName);
-            boolean check = AttributeTokenService.checkAccess(token,"admin") || AttributeTokenService.checkAccess(token,"root");
+            boolean checkPermission = AttributeTokenService.checkAccess(token,"admin") || AttributeTokenService.checkAccess(token,"root");
             boolean checkuserexist = this.checkUserExisted(requestData.getUserName());
-            if((AttributeTokenService.checkAccess(token,"admin") ||
-                    AttributeTokenService.checkAccess(token,"root")) &&
-                    !this.checkUserExisted(requestData.getUserName()))
+            if(checkPermission && !checkuserexist)
             {
                 Roles role = roleRepository.findByCode("manager");
                 Users manager = new Users(requestData.getUserName(),
@@ -96,5 +96,42 @@ public class UserService {
             System.out.println("Err in UserService.createManager: "+ e.getMessage());
             return null;
         }
+    }
+
+    public Boolean loginEnable(HttpServletRequest httpRequest, String userId)
+    {
+        String token = httpRequest.getHeader("Authorization");
+        try{
+
+            Users loginEnableUser = userRepository.getOne(userId);
+            Users userRequest = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
+            boolean checkAcess = false;
+
+            if(AttributeTokenService.checkAccess(token, "root"))
+            {
+                checkAcess = true;
+            }
+            else if(AttributeTokenService.checkAccess(token, "admin"))
+            {
+                if(loginEnableUser.getCreatedBy().equals(userRequest.getId()));
+                {
+                    checkAcess = true;
+                }
+            }
+
+            if(checkAcess == true)
+            {
+                loginEnableUser.setUpdatedBy(userRequest.getId());
+                loginEnableUser.setEnable(!loginEnableUser.getEnable());
+                loginEnableUser.setUpdatedAt(new Date());
+                userRepository.save(loginEnableUser);
+            }
+            return checkAcess;
+        } catch (Exception e)
+        {
+            System.out.println("Err in UserService.loginEnable");
+            return false;
+        }
+
     }
 }

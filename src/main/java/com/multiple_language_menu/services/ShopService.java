@@ -5,7 +5,9 @@ import com.multiple_language_menu.models.entities.Shops;
 import com.multiple_language_menu.models.entities.Users;
 import com.multiple_language_menu.models.request.ReqCreateAdmin;
 import com.multiple_language_menu.models.request.ReqCreateShop;
+import com.multiple_language_menu.models.request.ReqEditShop;
 import com.multiple_language_menu.models.responses.dataResponse.ResShop;
+import com.multiple_language_menu.models.responses.dataResponse.ResShopUser;
 import com.multiple_language_menu.repositories.IPaymentRepository;
 import com.multiple_language_menu.repositories.IShopRepository;
 import com.multiple_language_menu.repositories.IUserRepository;
@@ -13,12 +15,9 @@ import com.multiple_language_menu.services.authorize.AttributeTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.servlet.http.HttpServletRequest;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -69,6 +68,7 @@ public class ShopService {
                             requestData.getAddress(),
                             requestData.getPhone(),
                             requestData.getOpenTime(),
+                            requestData.getCloseTime(),
                             requestData.getWebsite(),
                             requestData.getWifi(),
                             requestData.getParkingScale(),
@@ -110,8 +110,6 @@ public class ShopService {
 
     public List<ResShop> getShops(HttpServletRequest httpRequest)
     {
-        //TODO: getShop logic
-        //Done
         try {
             String page = httpRequest.getParameter("page");
             String pagesize = httpRequest.getParameter("pagesize");
@@ -245,5 +243,174 @@ public class ShopService {
     }
 
 
+    public Boolean editShop (HttpServletRequest httpRequest,
+                             ReqEditShop requestData,
+                             String shopId) throws ParseException {
+        try {
+            Shops  shop = shopRepository.getOne(shopId);
+            if(shop == null || !shop.getOwner().getEnable())
+            {
+                return false;
+            }
+            //check Access
+            String token = httpRequest.getHeader("Authorization");
+            Boolean checkAccess = false;
+            Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
+            if(AttributeTokenService.checkAccess(token,"root"))
+            {
+                checkAccess = true;
+                shop.setContractTerm( new SimpleDateFormat("dd/MM/yyyy").parse(requestData.getContractTerm()));
+            }
+            else if(AttributeTokenService.checkAccess(token,"admin"))
+            {
+                //check CreateBY
+                if(user.getId().equals(shop.getCreatedBy()))
+                {
+                    checkAccess = true;
+                    shop.setContractTerm( new SimpleDateFormat("dd/MM/yyyy").parse(requestData.getContractTerm()));
+                }
+            }
+            else if(AttributeTokenService.checkAccess(token,"manager"))
+            {
 
+                //check ownerId
+                //check CreateBY
+                if(user.getId().equals(shop.getOwner().getId()))
+                {
+                    checkAccess = true;
+                }
+            }
+
+            //Edit Shop
+            if(checkAccess == true)
+            {
+                Users owner = shop.getOwner();
+                owner.setUsername(requestData.getOwnerName());
+                owner.setPassword(requestData.getOwnerPassword());
+                owner.setEmail(requestData.getOwnerEmail());
+                owner.setUpdatedAt(new Date());
+                owner.setUpdatedBy(user.getId());
+                userRepository.save(owner);
+
+                List<Payments> payments = (List<Payments>) shop.getPayments();
+
+                for (Payments payment : payments)
+                {
+                    paymentRepository.delete(payment);
+                }
+                List<Payments> paymentsEdit = new ArrayList<>();
+                for(String paymentCode : requestData.getPaymentMethod())
+                {
+                    Payments payment = paymentRepository.findByCode(paymentCode);
+                    paymentsEdit.add(payment);
+                }
+
+                shop.setOwner(owner);
+                shop.setName(requestData.getShopName());
+                shop.setAddress(requestData.getAddress());
+                shop.setOpenTime(requestData.getOpenTime());
+                shop.setCloseTime(requestData.getCloseTime());
+                shop.setWebsite(requestData.getWebsite());
+                shop.setWifi(requestData.getWifi());
+                shop.setParkingScale(requestData.getParkingScale());
+                shop.setSmokingPlace(requestData.getSmokingPlace());
+                shop.setPreOrder(requestData.getPreOrder());
+                shop.setDescription(requestData.getDescription());
+                shop.setCoverImage(requestData.getCoverImage());
+                shop.setPayments(paymentsEdit);
+                shop.setUpdatedAt(new Date());
+                shop.setUpdatedBy(user.getId());
+                shopRepository.save(shop);
+                return true;
+            }
+        } catch (Exception e)
+        {
+            System.out.println("Err in ShopService.editShop" + e.getMessage());
+        }
+
+        return false;
+    }
+
+    public Boolean deleteShop(HttpServletRequest httpRequest,
+                              String shopId)
+    {
+        try {
+//          checkShop exist
+            Shops  shop = shopRepository.getOne(shopId);
+            if(shop == null)
+            {
+                return false;
+            }
+            //check Access
+            String token = httpRequest.getHeader("Authorization");
+            Boolean checkAccess = false;
+            Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
+            if(AttributeTokenService.checkAccess(token,"root"))
+            {
+                checkAccess = true;
+            }
+            else if(AttributeTokenService.checkAccess(token,"admin"))
+            {
+                //check CreateBY
+                if(user.getId().equals(shop.getCreatedBy()))
+                {
+                    checkAccess = true;
+                }
+            }
+            else {
+                return false;
+            }
+
+            if(checkAccess == true)
+
+            {
+                shopRepository.delete(shop);
+                return true;
+            }
+            return false;
+        } catch (Exception e)
+        {
+            System.out.println("Err in ShopService.deleteShop: " + e.getMessage());
+            return false;
+        }
+
+    }
+
+    public Object getShopById(HttpServletRequest httpRequest,
+                               String shopId)
+    {
+        try {
+            //checkShop exist
+            Shops  shop = shopRepository.findById(shopId).get();
+            if(shop == null || !shop.getOwner().getEnable())
+            {
+                return null;
+            }
+            //check Access
+            String token = httpRequest.getHeader("Authorization");
+            if(token == null)
+            {
+                ResShopUser response = new ResShopUser(shop);
+                return response;
+            }
+            else
+            {
+                Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
+                if(AttributeTokenService.checkAccess(token,"root")||
+                    (AttributeTokenService.checkAccess(token,"admin")
+                            &&user.getId().equals(shop.getCreatedBy())) ||
+                    (AttributeTokenService.checkAccess(token,"manager")
+                            &&user.getId().equals(shop.getOwner().getId())))
+                {
+                    ResShop response = new ResShop(shop);
+                    return response;
+                }
+                return null;
+            }
+        } catch (Exception e)
+        {
+            System.out.println("Err in ShopService.getShopById: " + e.getMessage());
+            return null;
+        }
+    }
 }

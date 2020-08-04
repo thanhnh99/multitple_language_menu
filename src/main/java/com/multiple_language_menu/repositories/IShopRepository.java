@@ -8,12 +8,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
-import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface IShopRepository  extends JpaRepository<Shops, String> {
-    //TODO: QUERY LOGIC
-
 //    @Query("SELECT s FROM Shops s WHERE s.owner.id = :ownerId")
     Page<Shops> findByOwner(Users owner, Pageable pageable);
 

@@ -43,7 +43,7 @@ public class AppAuthorizerImpl implements IAppAuthorizer {
             //Truy vấn vào CSDL theo userId + menuCode + action
             //Nếu có quyền thì
             Users userEntity = userRepository.findByUsername(username);
-            if(userEntity != null)
+            if(userEntity != null && userEntity.getEnable())
             {
                 for(Roles roleEntity : userEntity.getRoles())
                 {

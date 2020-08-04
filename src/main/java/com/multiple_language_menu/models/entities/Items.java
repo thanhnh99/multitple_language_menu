@@ -1,5 +1,6 @@
 package com.multiple_language_menu.models.entities;
 
+import com.multiple_language_menu.models.request.ReqCreateItem;
 import lombok.*;
 
 import javax.persistence.*;
@@ -27,6 +28,13 @@ public class Items extends BaseEntity{
 
     @OneToMany(mappedBy = "item")
     private Collection<OrderDetails> orderDetails;
+
+    public Items(ReqCreateItem reqCreateItem)
+    {
+        this.name = reqCreateItem.getItemName();
+        this.price = reqCreateItem.getPrice();
+        this.description = reqCreateItem.getDescription();
+    }
 
 
 }

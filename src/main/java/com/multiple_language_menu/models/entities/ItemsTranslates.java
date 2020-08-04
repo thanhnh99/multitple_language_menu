@@ -1,5 +1,6 @@
 package com.multiple_language_menu.models.entities;
 
+import com.multiple_language_menu.models.request.ReqTranslateItem;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,4 +24,11 @@ public class ItemsTranslates extends BaseEntity{
     @ManyToOne
     @JoinColumn(name = "item_id")
     private Items item;
+
+    public ItemsTranslates(ReqTranslateItem requestData)
+    {
+        this.languageCode = requestData.getLanguageCode();
+        this.name = requestData.getItemName();
+        this.description = requestData.getDescription();
+    }
 }

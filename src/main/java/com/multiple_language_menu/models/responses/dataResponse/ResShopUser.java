@@ -9,12 +9,33 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResShopUser {
-    String shopName;
-    String shopId;
+    private String shopName;
+    private String shopId;
+    private String openTime;
+    private String closeTime;
+    private Boolean wifi;
+    private String website;
+    private Integer parkingScale;
+    private Boolean preOrder;
+    private  Boolean smokingPlace;
+    private  String coverImage;
+    private String description;
+    private String averagePrice;
 
-    public ResShopUser(Shops shops)
+
+    public ResShopUser(Shops shop)
     {
-        this.shopName = shops.getName();
-        this.shopId = shops.getId();
+        this.shopName = shop.getName();
+        this.shopId = shop.getId();
+        this.openTime = shop.getOpenTime();
+        this.closeTime = shop.getCloseTime();
+        this.wifi = shop.getWifi();
+        this.parkingScale = shop.getParkingScale();
+        this.preOrder = shop.getPreOrder();
+        this.smokingPlace = shop.getSmokingPlace();
+        this.coverImage = shop.getCoverImage();
+        this.description = shop.getDescription();
+        this.website = shop.getWebsite();
+        this.averagePrice = shop.getAveragePrice().toString();
     }
 }

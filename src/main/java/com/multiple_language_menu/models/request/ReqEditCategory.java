@@ -8,9 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReqEditCategory {
-    private Integer rank;
-    private String categoryId;
-    private String CategoryId;
+    private Object categoryIds;
+    private String parentId;
     private String categoryName;
     private String description;
 
