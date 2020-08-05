@@ -14,6 +14,7 @@ import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -41,7 +42,13 @@ public class CategoryService {
     IItemTranslateRepository itemTranslateRepository;
 
     @Autowired
+    ILogRepository logRepository;
+
+    @Autowired
     TranslateProcess translateProcess;
+
+    @Autowired
+    JavaMailSender emailSender;
 
 
     public Boolean createCategory(HttpServletRequest httpRequest, ReqCreateCategory requestData)
@@ -70,7 +77,11 @@ public class CategoryService {
                 categoryRepository.save(newCategory);
 
                 // translate schedule
-                translateProcess.translateCategory(newCategory, categoryTranslateRepository);
+                translateProcess.translateCategory(newCategory,
+                        categoryTranslateRepository,
+                        shopRepository,
+                        logRepository,
+                        emailSender);
                 return true;
             }
                 return false;
@@ -131,7 +142,11 @@ public class CategoryService {
                     }
                     categoryRepository.save(updateCategory);
                     // update translate data.
-                    translateProcess.translateCategory(updateCategory, categoryTranslateRepository);
+                    translateProcess.translateCategory(updateCategory,
+                            categoryTranslateRepository,
+                            shopRepository,
+                            logRepository,
+                            emailSender);
                     return true;
                 }
                 else

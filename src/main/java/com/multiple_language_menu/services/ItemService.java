@@ -9,6 +9,7 @@ import com.multiple_language_menu.models.request.ReqEditItem;
 import com.multiple_language_menu.repositories.*;
 import com.multiple_language_menu.services.authorize.AttributeTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,7 +34,13 @@ public class ItemService {
     IUserRepository userRepository;
 
     @Autowired
+    ILogRepository logRepository;
+
+    @Autowired
     TranslateProcess translateProcess;
+
+    @Autowired
+    JavaMailSender emailSender;
     public Boolean createItem(HttpServletRequest httpRequest, ReqCreateItem requestData)
     {
         try {
@@ -52,7 +59,11 @@ public class ItemService {
                 newItem.setCategory(category);
                 newItem.setRank(category.getItems().size());
                 itemRepository.save(newItem);
-                translateProcess.translateItem(newItem, itemTranslateRepository);
+                translateProcess.translateItem(newItem,
+                        itemTranslateRepository,
+                        shopRepository,
+                        logRepository,
+                        emailSender);
                 return true;
             }
             return false;
@@ -101,7 +112,11 @@ public class ItemService {
                     }
                     itemRepository.save(updateItem);
                     // update translate data.
-                    translateProcess.translateItem(updateItem, itemTranslateRepository);
+                    translateProcess.translateItem(updateItem,
+                            itemTranslateRepository,
+                            shopRepository,
+                            logRepository,
+                            emailSender);
                     return true;
                 }
                 return false;
