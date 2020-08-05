@@ -4,11 +4,17 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.multiple_language_menu.models.entities.Categories;
 import com.multiple_language_menu.models.entities.CategoriesTranslates;
+import com.multiple_language_menu.models.request.ReqCreateLog;
+import com.multiple_language_menu.models.request.ReqSendMail;
 import com.multiple_language_menu.models.request.ReqTranslateCategory;
 import com.multiple_language_menu.repositories.ICategoryTranslateRepository;
+import com.multiple_language_menu.repositories.ILogRepository;
+import com.multiple_language_menu.repositories.IShopRepository;
+import lombok.SneakyThrows;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -17,12 +23,17 @@ import java.util.List;
 @Component
 public class TranslateCategoryJob implements Job {
 
-
+    @SneakyThrows
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         System.out.println("Execute Translate category");
         Categories requestData = (Categories) context.getJobDetail().getJobDataMap().get("data");
-        ICategoryTranslateRepository categoryTranslateRepository = (ICategoryTranslateRepository) context.getJobDetail().getJobDataMap().get("category");
+        ICategoryTranslateRepository categoryTranslateRepository = (ICategoryTranslateRepository) context.getJobDetail().getJobDataMap().get("categoryTranslateRepository");
+        ILogRepository logRepository = (ILogRepository) context.getJobDetail().getJobDataMap().get("logRepository");
+        IShopRepository shopRepository = (IShopRepository) context.getJobDetail().getJobDataMap().get("shopRepository");
+        LogProcess logProcess = (LogProcess) context.getJobDetail().getJobDataMap().get("logProcess");
+        MailProcess mailProcess = (MailProcess) context.getJobDetail().getJobDataMap().get("mailProcess");
+        JavaMailSender emailSender = (JavaMailSender) context.getJobDetail().getJobDataMap().get("emailSender");
         List<String> languageCodes = (List<String>) context.getJobDetail().getJobDataMap().get("languageCode");
         for(String languageCode : languageCodes)
         {
@@ -39,16 +50,23 @@ public class TranslateCategoryJob implements Job {
                 }
                 else
                 {
-                    CategoriesTranslates newCategoriesTranslate = new CategoriesTranslates(reqTranslateCategory);
-                    newCategoriesTranslate.setCategory(requestData);
-                    newCategoriesTranslate.setLanguageCode(languageCode);
-                    categoryTranslateRepository.save(newCategoriesTranslate);
+                    categoriesTranslate = new CategoriesTranslates(reqTranslateCategory);
+                    categoriesTranslate.setCategory(requestData);
+                    categoriesTranslate.setLanguageCode(languageCode);
+                    categoryTranslateRepository.save(categoriesTranslate);
                 }
+
             } catch (Exception e)
             {
                 System.out.println("Err in TranslateCategory.excute: " + e.getMessage());
             }
         }
+        ReqCreateLog reqCreateLog = new ReqCreateLog(requestData);
+        logProcess.createLog(reqCreateLog,shopRepository,logRepository);
+        ReqSendMail reqSendMail = new ReqSendMail(requestData.getShop().getOwner().getEmail(),
+                "CATEGORY " + requestData.getName() + " HAS TRANSLATED",
+                " CATEGORY " + requestData.getName() + " HAS TRANSLATED");
+        mailProcess.sendMail(reqSendMail,emailSender);
     }
 
     private String translate(String content, String targetLanguageCode)

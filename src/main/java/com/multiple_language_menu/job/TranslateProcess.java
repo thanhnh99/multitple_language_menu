@@ -6,14 +6,23 @@ import com.multiple_language_menu.models.entities.Items;
 import com.multiple_language_menu.models.request.ReqTranslateItem;
 import com.multiple_language_menu.repositories.ICategoryTranslateRepository;
 import com.multiple_language_menu.repositories.IItemTranslateRepository;
+import com.multiple_language_menu.repositories.ILogRepository;
+import com.multiple_language_menu.repositories.IShopRepository;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class TranslateProcess {
+    @Autowired
+    LogProcess logProcess;
+
+    @Autowired
+    MailProcess mailProcess;
 
     Scheduler scheduler;
 
@@ -22,13 +31,22 @@ public class TranslateProcess {
     }
 
 
-    public void translateCategory(Categories requestData, ICategoryTranslateRepository category) throws SchedulerException {
+    public void translateCategory(Categories requestData,
+                                  ICategoryTranslateRepository categoryTranslateRepository,
+                                  IShopRepository shopRepository,
+                                  ILogRepository logRepository,
+                                  JavaMailSender emailSender) throws SchedulerException {
         List<String> languageCode = LanguageConstant.languageCode();
         String identity = "translate-category" + requestData.getId() + "-" + System.currentTimeMillis();
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put("data", requestData);
         jobDataMap.put("languageCode", languageCode);
-        jobDataMap.put("category", category);
+        jobDataMap.put("categoryTranslateRepository", categoryTranslateRepository);
+        jobDataMap.put("shopRepository", shopRepository);
+        jobDataMap.put("logRepository", logRepository);
+        jobDataMap.put("logProcess", logProcess);
+        jobDataMap.put("mailProcess", mailProcess);
+        jobDataMap.put("emailSender", emailSender);
         JobDetail job = JobBuilder.newJob(TranslateCategoryJob.class)
                 .withIdentity(identity)
                 .withDescription("Translate category")
@@ -42,13 +60,22 @@ public class TranslateProcess {
         scheduler.scheduleJob(job, trigger);
     }
 
-    public void translateItem(Items requestData, IItemTranslateRepository category) throws SchedulerException {
+    public void translateItem(Items requestData,
+                              IItemTranslateRepository itemTranslateRepository,
+                              IShopRepository shopRepository,
+                              ILogRepository logRepository,
+                              JavaMailSender emailSender) throws SchedulerException {
         List<String> languageCode = LanguageConstant.languageCode();
         String identity = "translate-item" + requestData.getId() + "-" + System.currentTimeMillis();
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put("data", requestData);
         jobDataMap.put("languageCode", languageCode);
-        jobDataMap.put("category", category);
+        jobDataMap.put("itemTranslateRepository", itemTranslateRepository);
+        jobDataMap.put("shopRepository", shopRepository);
+        jobDataMap.put("logRepository", logRepository);
+        jobDataMap.put("logProcess", logProcess);
+        jobDataMap.put("mailProcess", mailProcess);
+        jobDataMap.put("emailSender", emailSender);
         JobDetail job = JobBuilder.newJob(TranslateItemJob.class)
                 .withIdentity(identity)
                 .withDescription("Translate item")
