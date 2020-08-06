@@ -77,6 +77,6 @@ public class TranslateItemJob implements Job {
         String result = restTemplate.getForObject(url, String.class);
         JsonArray convertedObject = new Gson().fromJson(result, JsonArray.class);
         String targetResult = convertedObject.get(0).getAsJsonArray().get(0).getAsJsonArray().get(0).toString();
-        return targetResult;
+        return targetResult.substring(1,targetResult.length()-1);
     }
 }

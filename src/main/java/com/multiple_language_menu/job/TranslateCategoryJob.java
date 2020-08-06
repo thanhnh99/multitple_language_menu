@@ -45,7 +45,7 @@ public class TranslateCategoryJob implements Job {
                 if(categoriesTranslate != null)
                 {
                     categoriesTranslate.setName(reqTranslateCategory.getName());
-                    reqTranslateCategory.setDescription(reqTranslateCategory.getDescription());
+                    categoriesTranslate.setDescription(reqTranslateCategory.getDescription());
                     categoryTranslateRepository.save(categoriesTranslate);
                 }
                 else
@@ -76,6 +76,6 @@ public class TranslateCategoryJob implements Job {
         String result = restTemplate.getForObject(url, String.class);
         JsonArray convertedObject = new Gson().fromJson(result, JsonArray.class);
         String targetResult = convertedObject.get(0).getAsJsonArray().get(0).getAsJsonArray().get(0).toString();
-        return targetResult;
+        return targetResult.substring(1,targetResult.length()-1);
     }
 }
