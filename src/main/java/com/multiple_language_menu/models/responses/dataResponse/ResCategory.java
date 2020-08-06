@@ -2,9 +2,11 @@ package com.multiple_language_menu.models.responses.dataResponse;
 
 import com.multiple_language_menu.models.entities.Categories;
 import com.multiple_language_menu.models.entities.CategoriesTranslates;
+import lombok.Data;
 
 import java.util.List;
 
+@Data
 public class ResCategory {
     private Integer rank;
     private String categoryId;
