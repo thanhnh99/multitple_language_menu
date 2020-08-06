@@ -1,7 +1,9 @@
 package com.multiple_language_menu.models.request;
 
-import java.util.List;
+import lombok.Data;
 
+import java.util.List;
+@Data
 public class ReqCreateOrder {
     private String shopId;
     private List<ReqItemData> itemList;
