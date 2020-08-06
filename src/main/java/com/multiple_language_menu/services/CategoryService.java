@@ -1,6 +1,5 @@
 package com.multiple_language_menu.services;
 
-import com.multiple_language_menu.job.TranslateCategoryJob;
 import com.multiple_language_menu.job.TranslateProcess;
 import com.multiple_language_menu.models.entities.*;
 import com.multiple_language_menu.models.request.ReqCreateCategory;
@@ -9,10 +8,6 @@ import com.multiple_language_menu.models.responses.dataResponse.ResCategory;
 import com.multiple_language_menu.models.responses.dataResponse.ResItem;
 import com.multiple_language_menu.repositories.*;
 import com.multiple_language_menu.services.authorize.AttributeTokenService;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.Scheduler;
-import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -66,25 +61,29 @@ public class CategoryService {
             {
                 parentCategory = categoryRepository.findById(requestData.getParentCategory()).get();
             }
-            if(true)
+            Categories newCategory = new Categories();
+            newCategory.setName(requestData.getCategoryName());
+            newCategory.setDescription(requestData.getDescription());
+            newCategory.setShop(shop);
+            newCategory.setCreatedBy(manager.getId());
+            newCategory.setCategoriesParent(parentCategory);
+            if(parentCategory != null)
             {
-                Categories newCategory = new Categories();
-                newCategory.setName(requestData.getCategoryName());
-                newCategory.setDescription(requestData.getDescription());
-                newCategory.setShop(shop);
-                newCategory.setCreatedBy(manager.getId());
-                newCategory.setCategoriesParent(parentCategory);
-                categoryRepository.save(newCategory);
-
-                // translate schedule
-                translateProcess.translateCategory(newCategory,
-                        categoryTranslateRepository,
-                        shopRepository,
-                        logRepository,
-                        emailSender);
-                return true;
+                newCategory.setRank(this.getChildByCategoryId(parentCategory.getId(),"vi").size());
             }
-                return false;
+            else
+            {
+                newCategory.setRank(shop.getCategories().size());
+            }
+            categoryRepository.save(newCategory);
+
+            // translate schedule
+            translateProcess.translateCategory(newCategory,
+                    categoryTranslateRepository,
+                    shopRepository,
+                    logRepository,
+                    emailSender);
+            return true;
         } catch (Exception e)
         {
             System.out.println("Err in CategoryService.create: " + e.getMessage());
@@ -108,20 +107,27 @@ public class CategoryService {
                 for (String categoryUpdateId : (List<String>) requestData.getCategoryIds())
                 {
                     Categories categoryUpdate = categoryRepository.findById(categoryUpdateId).get();
-                    if(!categoryUpdate.getCategoriesParent().getId().equals(requestData.getParentId())||
-                            !AttributeTokenService.checkAccess(token,"root")
-                            ||!(AttributeTokenService.checkAccess(token,"manager")&&
+                    if(AttributeTokenService.checkAccess(token,"root")
+                            ||(AttributeTokenService.checkAccess(token,"manager")&&
                             user.getId().equals(categoryUpdate.getShop().getOwner().getId())))
                     {
-                        return false;
+                        checkAccess = true;
+                    }
+                    else
+                    {
+                        checkAccess = false;
                     }
                 }
-                int index = 1;
-                for (String categoryUpdateId : (List<String>) requestData.getCategoryIds())
+                if (checkAccess)
                 {
-                    Categories categoryUpdate = categoryRepository.findById(categoryUpdateId).get();
-                    categoryUpdate.setRank(index++);
-                    categoryRepository.save(categoryUpdate);
+                    int index = 0;
+                    for (String categoryUpdateId : (List<String>) requestData.getCategoryIds())
+                    {
+                        Categories categoryUpdate = categoryRepository.findById(categoryUpdateId).get();
+                        categoryUpdate.setRank(index++);
+                        categoryRepository.save(categoryUpdate);
+                    }
+                    return true;
                 }
             }
             else if(requestData.getCategoryIds() instanceof  String) //update data
@@ -133,7 +139,7 @@ public class CategoryService {
                 {
                     updateCategory.setName(requestData.getCategoryName());
                     updateCategory.setDescription(requestData.getDescription());
-                    if(requestData.getParentId() == null)
+                    if(requestData.getParentId() != null)
                     {
                         Categories parentCategory = categoryRepository.findById(requestData.getParentId()).get();
                         List<Categories> childCategories = categoryRepository.findCategoriesByCategoriesParent(parentCategory);
@@ -215,7 +221,7 @@ public class CategoryService {
         }
     }
 
-    public List<ResCategory> getCategories(HttpServletRequest httpRequest)
+    public List<ResCategory> getCategoryByShopId(HttpServletRequest httpRequest)
     {
         try {
             String shopId = httpRequest.getParameter("shop_id");
@@ -225,10 +231,6 @@ public class CategoryService {
                 return null;
             }
             String languageCode = httpRequest.getParameter("language_code");
-            if(shopId == null)
-            {
-                return null;
-            }
             List<ResCategory> responses = new ArrayList<ResCategory>();
             if(languageCode == null)
             {
@@ -251,7 +253,16 @@ public class CategoryService {
                     if(category.getCategoriesParent() == null)
                     {
                         CategoriesTranslates categoriesTranslates = categoryTranslateRepository.findByCategoryAndLanguageCode(category,languageCode);
-                        ResCategory resCategory = new ResCategory(categoriesTranslates);
+                        ResCategory resCategory;
+                        if(categoriesTranslates == null)
+                        {
+                            resCategory = new ResCategory(category);
+
+                        }
+                        else
+                        {
+                            resCategory = new ResCategory(categoriesTranslates);
+                        }
                         responses.add(resCategory);
                     }
                 }
@@ -270,7 +281,7 @@ public class CategoryService {
 
         try{
             List<Object> response = new ArrayList<Object>();
-            Categories categoryParent = categoryRepository.getOne(categoryId);
+            Categories categoryParent = categoryRepository.findById(categoryId).get();
             List<Categories> categories = categoryRepository.findCategoriesByCategoriesParent(categoryParent);
             List<Items> items = itemRepository.findByCategory(categoryParent);
             if(categories.size() > 0)
@@ -282,7 +293,7 @@ public class CategoryService {
                     response.add(resCategory);
                 }
             }
-            else if(items.size() > 0)
+            if(items.size() > 0)
             {
                 for(Items item : items)
                 {
@@ -295,7 +306,7 @@ public class CategoryService {
         }catch (Exception e)
         {
             System.out.println("Err in CategoryService.getChildByCategoryId: " + e.getMessage());
-            return null;
+            return new ArrayList<>();
         }
     }
 }

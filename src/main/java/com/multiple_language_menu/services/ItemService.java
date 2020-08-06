@@ -13,6 +13,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -81,19 +82,33 @@ public class ItemService {
             Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
             if (requestData.getItemIds() instanceof List) {
                 //update Rank
+                Boolean checkAccess = false;
                 for (String itemUpdateId : (List<String>) requestData.getItemIds()) {
                     Items itemUpdate = itemRepository.findById(itemUpdateId).get();
-                    if (!AttributeTokenService.checkAccess(token, "root")
-                            || !(AttributeTokenService.checkAccess(token, "manager") &&
+                    if (AttributeTokenService.checkAccess(token, "root")
+                            || (AttributeTokenService.checkAccess(token, "manager") &&
                             user.getId().equals(itemUpdate.getCategory().getShop().getOwner().getId()))) {
-                        return false;
+                        checkAccess = true;
+                        if (checkAccess == false) break;
+                    }
+                    else {
+                        checkAccess = false;
                     }
                 }
-                int index = 1;
-                for (String itemUpdateId : (List<String>) requestData.getItemIds()) {
-                    Items itemUpdate = itemRepository.findById(itemUpdateId).get();
-                    itemUpdate.setRank(index++);
-                    itemRepository.save(itemUpdate);
+                if(checkAccess == true)
+                {
+                    int index = 0;
+                    for (String itemUpdateId : (List<String>) requestData.getItemIds())
+                    {
+                        Items itemUpdate = itemRepository.findById(itemUpdateId).get();
+                        itemUpdate.setRank(index++);
+                        itemRepository.save(itemUpdate);
+                    }
+                    return true;
+                }
+                else
+                {
+                    return false;
                 }
             } else if (requestData.getItemIds() instanceof String) {
                 //update data
@@ -103,7 +118,9 @@ public class ItemService {
                         user.getId().equals(updateItem.getCategory().getShop().getOwner().getId()))) {
                     updateItem.setName(requestData.getItemName());
                     updateItem.setDescription(requestData.getDescription());
-                    if (!requestData.getCategoryId().equals(updateItem.getCategory().getId())) {
+                    updateItem.setUpdatedAt(new Date());
+                    updateItem.setUpdatedBy(user.getId());
+                    if (requestData.getCategoryId() != null && !requestData.getCategoryId().equals(updateItem.getCategory().getId())) {
                         Categories toCategory = categoryRepository.findById(requestData.getCategoryId()).get();
                         List<Categories> childCategories = categoryRepository.findCategoriesByCategoriesParent(toCategory);
                         if (toCategory != null && childCategories.size() < 1) {
