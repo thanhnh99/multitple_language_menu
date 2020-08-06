@@ -6,8 +6,10 @@ import com.multiple_language_menu.models.entities.Categories;
 import com.multiple_language_menu.models.entities.CategoriesTranslates;
 import com.multiple_language_menu.models.entities.Items;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class ReqCreateLog {
     private String target;
     private ETargetType targetType ;
@@ -18,7 +20,7 @@ public class ReqCreateLog {
 
     public ReqCreateLog(CategoriesTranslates categoriesTranslates)
     {
-        this.target = categoriesTranslates.getCategory().getId();
+        this.target = categoriesTranslates.getCategory().getName();
         this.targetType = ETargetType.CATEGORY;
         this.action = "dich";
         this.actionType = EActionType.TRANSLATE;
@@ -27,7 +29,7 @@ public class ReqCreateLog {
 
     public ReqCreateLog(Categories category)
     {
-        this.target = category.getId();
+        this.target = category.getName();
         this.targetType = ETargetType.CATEGORY;
         this.action = "TRANSLATE";
         this.actionType = EActionType.TRANSLATE;
@@ -36,10 +38,11 @@ public class ReqCreateLog {
 
     public ReqCreateLog(Items items)
     {
-        this.target = items.getId();
+        this.target = items.getName();
         this.targetType = ETargetType.CATEGORY;
         this.action = "TRANSLATE";
         this.actionType = EActionType.TRANSLATE;
         this.shopId = items.getCategory().getShop().getId();
     }
+
 }
