@@ -20,6 +20,9 @@ public class TokenJwtUtil {
     static final String HEADER_STRING = "Authorization";
     static final String LOGIN_URI = "/login";
     static final String LOGOUT_URI = "/logout";
+    static final String SHOP_URI = "/shop/";
+    static final String CATEGORY_URI = "/category/";
+    static final String ITEM_URI = "/item/";
 
     public static String generateJwt(ReqLogin reqLogin, List<String> roles) {
         long expirationTime = EXPIRATIONTIME;
@@ -36,9 +39,14 @@ public class TokenJwtUtil {
     public  Authentication getAuthentication(HttpServletRequest request) {
         String token = request.getHeader(HEADER_STRING);
         String securedPath = request.getRequestURI();
-        if(securedPath.equals(LOGIN_URI) || securedPath.equals(LOGOUT_URI))
+        if((securedPath.equals(LOGIN_URI) ||
+                securedPath.equals(LOGOUT_URI) ||
+                securedPath.contains(SHOP_URI) ||
+                securedPath.contains(CATEGORY_URI) ||
+                securedPath.contains(ITEM_URI)) &&
+                token == null)
         {
-            return new UsernamePasswordAuthenticationToken(LOGIN_URI, null,new ArrayList<>());
+            return new UsernamePasswordAuthenticationToken(securedPath, null,new ArrayList<>());
         }
         if( token != null){
             // parse the token
