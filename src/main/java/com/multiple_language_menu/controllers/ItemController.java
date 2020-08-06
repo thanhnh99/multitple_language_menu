@@ -37,10 +37,9 @@ public class ItemController {
         return ResponseEntity.status(200).body(response);
     }
 
-    @PutMapping("/{item}")
+    @PutMapping()
     @PreAuthorize("@appAuthorizer.authorize(authentication, {'manager'})")
     public ResponseEntity<HttpResponse> editItem(HttpServletRequest httpServletRequest,
-                                                 @PathVariable String itemId,
                                                  @RequestBody ReqEditItem requestData)
     {
         HttpResponse response = new HttpResponse();
@@ -53,7 +52,7 @@ public class ItemController {
         }
         response.setStatusCode("400");
         response.setMessage("bad request");
-        return ResponseEntity.status(200).body(response);
+        return ResponseEntity.status(400).body(response);
     }
 
     @DeleteMapping
