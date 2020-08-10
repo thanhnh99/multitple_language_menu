@@ -1,6 +1,6 @@
 package com.multiple_language_menu.services.authorize;
 
-import com.multiple_language_menu.filters.TokenJwtUtil;
+import com.multiple_language_menu.filters.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.function.Function;
 
 public  class AttributeTokenService {
-    private static final String SECRET = TokenJwtUtil.SECRET;
-    private static final String TOKEN_PREFIX = TokenJwtUtil.TOKEN_PREFIX;
+    private static final String SECRET = JwtTokenProvider.SECRET;
+    private static final String TOKEN_PREFIX = JwtTokenProvider.TOKEN_PREFIX;
 
     //retrieve username from jwt token
     public static String getUsernameFromToken(String token) {
@@ -41,7 +41,7 @@ public  class AttributeTokenService {
     {
         Object o = getAllClaimsFromToken(token).get("roles");
         if ( o instanceof List) {
-            List<String> data = (ArrayList) getAllClaimsFromToken(token).get("roles");
+            List<String> data = (ArrayList<String>) getAllClaimsFromToken(token).get("roles");
             return data;
         }
         return null;

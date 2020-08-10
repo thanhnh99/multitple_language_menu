@@ -1,26 +1,77 @@
 package com.multiple_language_menu.services;
 
+import com.multiple_language_menu.filters.JwtTokenProvider;
+import com.multiple_language_menu.models.auth.CustomUserDetail;
 import com.multiple_language_menu.models.entities.Roles;
 import com.multiple_language_menu.models.entities.Users;
 import com.multiple_language_menu.models.request.ReqCreateAdmin;
 import com.multiple_language_menu.models.request.ReqCreateShop;
+import com.multiple_language_menu.models.request.ReqLogin;
+import com.multiple_language_menu.models.responses.dataResponse.ResLogin;
 import com.multiple_language_menu.repositories.IRoleRepository;
 import com.multiple_language_menu.repositories.IUserRepository;
 import com.multiple_language_menu.services.authorize.AttributeTokenService;
 import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.parameters.P;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
     @Autowired
     IUserRepository userRepository;
     @Autowired
     IRoleRepository roleRepository;
+
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    public ResLogin authenticateUser(ReqLogin request)
+    {
+        ResLogin response = new ResLogin();
+        CustomUserDetail customUserDetail = loadUserByUserName(request.getUsername());
+        if(customUserDetail == null ||
+                !passwordEncoder.matches(request.getPassword(), customUserDetail.getPassword()))
+        {
+            response = null;
+        }
+        else
+        {
+            if(customUserDetail.getUser().getEnable())
+            {
+                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                        request.getUsername(),
+                        request.getPassword()
+                ));
+
+                String token = jwtTokenProvider.generateJwt(customUserDetail);
+                response.setToken(token);
+                response.setRoles(customUserDetail.getAuthorities());
+            }
+            else
+            {
+                response = null;
+            }
+        }
+        return response;
+    }
 
     public Boolean checkUserExisted(String username)
     {
@@ -49,7 +100,7 @@ public class UserService {
             {
                 Roles role = roleRepository.findByCode("manager");
                 Users manager = new Users(requestData.getUserName(),
-                        requestData.getPassword(),
+                        passwordEncoder.encode(requestData.getPassword()),
                         requestData.getEmail(),
                         true);
                 manager.setCreatedBy(requestUser.getId());
@@ -134,4 +185,25 @@ public class UserService {
         }
 
     }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        //Kiểm tra user có tồn tại không
+        Users user = userRepository.findByUsername(username);
+        if(user == null)
+        {
+            throw new UsernameNotFoundException(username);
+        }
+        return  new CustomUserDetail(user);
+    }
+
+    public CustomUserDetail loadUserByUserName(String userName){
+        Users user = userRepository.findByUsername(userName);
+        if(user == null) {
+            return null;
+        }
+        return new CustomUserDetail(user);
+    }
+
+
 }

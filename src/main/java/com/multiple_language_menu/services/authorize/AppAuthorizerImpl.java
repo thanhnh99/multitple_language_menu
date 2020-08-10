@@ -1,5 +1,6 @@
 package com.multiple_language_menu.services.authorize;
 
+import com.multiple_language_menu.models.auth.GranAuthorityImpl;
 import com.multiple_language_menu.models.entities.Roles;
 import com.multiple_language_menu.models.entities.Users;
 import com.multiple_language_menu.repositories.IUserRepository;
@@ -20,11 +21,6 @@ public class AppAuthorizerImpl implements IAppAuthorizer {
 
     @Override
     public boolean authorize(Authentication authentication, List<String> roles) {
-//        String securedPath = extractSecuredPath(callerObj);
-//        if (securedPath==null || "".equals(securedPath.trim())) {//login, logout
-//            return true;
-//        }
-//        String menuCode = securedPath.substring(1);//Bỏ dấu "/" ở đầu Path
         for (String role : roles)
         {
             System.out.print(role + " - ");
@@ -45,11 +41,11 @@ public class AppAuthorizerImpl implements IAppAuthorizer {
             Users userEntity = userRepository.findByUsername(username);
             if(userEntity != null && userEntity.getEnable())
             {
-                for(Roles roleEntity : userEntity.getRoles())
+                for(String roleEntity : userEntity.getRoles())
                 {
                     for (String role : roles)
                     {
-                        if(roleEntity.getCode().equals(role))
+                        if(roleEntity.equals(role))
                         {
                             isAllow = true;
                             break;

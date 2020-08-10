@@ -15,6 +15,7 @@ import com.multiple_language_menu.services.authorize.AttributeTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
@@ -37,6 +38,9 @@ public class ShopService {
     IPaymentRepository paymentRepository;
     @Autowired
     IShopRepository shopRepository;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     public Boolean createShop(HttpServletRequest httpRequest, ReqCreateShop requestData)
     {
@@ -286,7 +290,7 @@ public class ShopService {
             {
                 Users owner = shop.getOwner();
                 owner.setUsername(requestData.getOwnerName());
-                owner.setPassword(requestData.getOwnerPassword());
+                owner.setPassword(passwordEncoder.encode(requestData.getOwnerPassword()));
                 owner.setEmail(requestData.getOwnerEmail());
                 owner.setUpdatedAt(new Date());
                 owner.setUpdatedBy(user.getId());
