@@ -7,18 +7,21 @@ import com.multiple_language_menu.repositories.IRoleRepository;
 import com.multiple_language_menu.repositories.IUserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 
 @Configuration
 public class InitData {
+    private final PasswordEncoder passwordEncoder;
     private final IRoleRepository roleRepository;
     private final IUserRepository userRepository;
     private final IPaymentRepository paymentRepository;
     private final ILanguageRepository languageRepository;
 
-    public InitData(IRoleRepository roleRepository, IUserRepository userRepository, IPaymentRepository paymentRepository, ILanguageRepository languageRepository)
+    public InitData(PasswordEncoder passwordEncoder, IRoleRepository roleRepository, IUserRepository userRepository, IPaymentRepository paymentRepository, ILanguageRepository languageRepository)
     {
+        this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.paymentRepository = paymentRepository;
@@ -69,7 +72,7 @@ public class InitData {
         {
             try {
                 Roles role = roleRepository.findByCode("admin");
-                Users rootUser = new Users("adminname","adminpass","admin@gmail.com", new Boolean(true));
+                Users rootUser = new Users("adminname",passwordEncoder.encode("adminpass"),"admin@gmail.com", new Boolean(true));
                 rootUser.addRole(role);
                 userRepository.save(rootUser);
 //                role.addUser(rootUser);
@@ -90,7 +93,7 @@ public class InitData {
         {
             try {
                 Roles role = roleRepository.findByCode("root");
-                Users rootUser = new Users("rootname","rootpass","root@gmail.com", new Boolean(true));
+                Users rootUser = new Users("rootname",passwordEncoder.encode("rootpass"),"root@gmail.com", new Boolean(true));
                 rootUser.addRole(role);
                 userRepository.save(rootUser);
 //                role.addUser(rootUser);
