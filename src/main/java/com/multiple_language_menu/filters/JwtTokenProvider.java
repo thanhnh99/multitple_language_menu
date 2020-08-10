@@ -2,17 +2,20 @@ package com.multiple_language_menu.filters;
 
 import com.multiple_language_menu.models.request.ReqLogin;
 import com.multiple_language_menu.services.authorize.AttributeTokenService;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ResolvableType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
+@Component
+@Slf4j
 public class TokenJwtUtil {
     static final long EXPIRATIONTIME = 86_400_000; // 1 day
     public static final String SECRET = "SecretKey";
@@ -20,9 +23,9 @@ public class TokenJwtUtil {
     static final String HEADER_STRING = "Authorization";
     static final String LOGIN_URI = "/login";
     static final String LOGOUT_URI = "/logout";
-    static final String SHOP_URI = "/shop/";
-    static final String CATEGORY_URI = "/category/";
-    static final String ITEM_URI = "/item/";
+    static final String SHOP_URI = "/shop";
+    static final String CATEGORY_URI = "/category";
+    static final String ITEM_URI = "/item";
 
     public static String generateJwt(ReqLogin reqLogin, List<String> roles) {
         long expirationTime = EXPIRATIONTIME;
@@ -43,10 +46,9 @@ public class TokenJwtUtil {
                 securedPath.equals(LOGOUT_URI) ||
                 securedPath.contains(SHOP_URI) ||
                 securedPath.contains(CATEGORY_URI) ||
-                securedPath.contains(ITEM_URI)) &&
-                token == null)
+                securedPath.contains(ITEM_URI)))
         {
-            return new UsernamePasswordAuthenticationToken(securedPath, null,new ArrayList<>());
+            return new UsernamePasswordAuthenticationToken(securedPath, null, new ArrayList<>());
         }
         if( token != null){
             // parse the token
@@ -68,5 +70,22 @@ public class TokenJwtUtil {
             return ((RequestMapping) annotation.get()).value()[0];
         }
         return null;
+    }
+
+
+    public boolean validateToken(String authToken) {
+        try {
+            Jwts.parser().setSigningKey(SECRET).parseClaimsJws(authToken);
+            return true;
+        } catch (MalformedJwtException ex) {
+            log.error("Invalid JWT token");
+        } catch (ExpiredJwtException ex) {
+            log.error("Expired JWT token");
+        } catch (UnsupportedJwtException ex) {
+            log.error("Unsupported JWT token");
+        } catch (IllegalArgumentException ex) {
+            log.error("JWT claims string is empty.");
+        }
+        return false;
     }
 }
