@@ -1,47 +1,59 @@
-package com.multiple_language_menu.models.request;
+package com.multiple_language_menu.models.auth;
 
 import com.multiple_language_menu.models.entities.Users;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.List;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class CustomUserDetail implements UserDetails {
 
     Users user;
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return user.getRoles();
+    public List<? extends GrantedAuthority> getAuthorities() {
+        return user.getRolesAuthority();
     }
 
     @Override
     public String getPassword() {
-        return null;
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return null;
+        return user.getUsername();
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return false;
+        return true;
+    }
+
+    public List<String> getRoles()
+    {
+        return user.getRoles();
     }
 }

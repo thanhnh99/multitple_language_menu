@@ -1,5 +1,6 @@
 package com.multiple_language_menu.filters;
 
+import com.multiple_language_menu.models.auth.CustomUserDetail;
 import com.multiple_language_menu.models.request.ReqLogin;
 import com.multiple_language_menu.services.authorize.AttributeTokenService;
 import io.jsonwebtoken.*;
@@ -16,7 +17,7 @@ import java.util.*;
 
 @Component
 @Slf4j
-public class TokenJwtUtil {
+public class JwtTokenProvider {
     static final long EXPIRATIONTIME = 86_400_000; // 1 day
     public static final String SECRET = "SecretKey";
     public static final String TOKEN_PREFIX = "Bearer";
@@ -27,51 +28,31 @@ public class TokenJwtUtil {
     static final String CATEGORY_URI = "/category";
     static final String ITEM_URI = "/item";
 
-    public static String generateJwt(ReqLogin reqLogin, List<String> roles) {
-        long expirationTime = EXPIRATIONTIME;
+    public String generateJwt(CustomUserDetail userDetail) {
+        Date now = new Date();
+        Date expirationDate = new Date(now.getTime() + EXPIRATIONTIME);
+
+        //Tạo JWT
         return Jwts.builder()
-                .setSubject(reqLogin.getUsername())
-                .claim("password", reqLogin.getPassword())
-                .claim("username",reqLogin.getUsername())
-                .claim("roles", roles)
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .setSubject((userDetail.getUser().getUsername()))
+                .setIssuedAt(now)
+                .setExpiration(expirationDate)
+                .claim("password", userDetail.getPassword())
+                .claim("username",userDetail.getUsername())
+                .claim("roles", userDetail.getRoles())
                 .signWith(SignatureAlgorithm.HS512, SECRET)
                 .compact();
     }
 
-    public  Authentication getAuthentication(HttpServletRequest request) {
-        String token = request.getHeader(HEADER_STRING);
-        String securedPath = request.getRequestURI();
-        if((securedPath.equals(LOGIN_URI) ||
-                securedPath.equals(LOGOUT_URI) ||
-                securedPath.contains(SHOP_URI) ||
-                securedPath.contains(CATEGORY_URI) ||
-                securedPath.contains(ITEM_URI)))
-        {
-            return new UsernamePasswordAuthenticationToken(securedPath, null, new ArrayList<>());
-        }
-        if( token != null){
-            // parse the token
-            String username = AttributeTokenService.getUsernameFromToken(token);
-            if(username != null)
-                return username != null ? new UsernamePasswordAuthenticationToken(username, null,new ArrayList<>()) : null;
-        }
-        return null;
+    // Lấy thông tin user từ jwt
+    public String getUserNameFromJWT(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(SECRET)
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.getSubject();
     }
-
-
-        // Lay ra securedPath duoc Annotate RequestMapping trong Controller
-    private String extractSecuredPath(Object callerObj) {
-        Class<?> clazz = ResolvableType.forClass(callerObj.getClass()).getRawClass();
-        Optional<Annotation> annotation = Arrays.asList(clazz.getAnnotations()).stream().filter((ann) -> {
-            return ann instanceof RequestMapping;
-        }).findFirst();
-        if (annotation.isPresent()) {
-            return ((RequestMapping) annotation.get()).value()[0];
-        }
-        return null;
-    }
-
 
     public boolean validateToken(String authToken) {
         try {
