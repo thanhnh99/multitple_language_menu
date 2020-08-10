@@ -14,8 +14,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.List;
 
 @RestController
@@ -104,7 +107,35 @@ public class CategoryController {
         }
         response.setStatusCode("400");
         response.setMessage("bad request");
+        return ResponseEntity.status(400).body(response);
+    }
+
+    @PostMapping("upload")
+    public ResponseEntity<HttpResponse> uploadCsv(HttpServletRequest httpRequest,
+                                                  @RequestParam("file") MultipartFile file)
+    {
+        categoryService.uploadCSV(httpRequest, file);
+        HttpResponse response = new HttpResponse();
+        response.setStatusCode("200");
+        response.setMessage("success");
+        response.setMessage("success");
         return ResponseEntity.status(200).body(response);
+    }
+
+    @DeleteMapping("/{categoryId}")
+    public ResponseEntity<HttpResponse> deleteCategory(HttpServletRequest httpRequest,
+                                                       @PathVariable String categoryId)
+    {
+        HttpResponse response = new HttpResponse();
+        if(categoryService.deleteCategory(httpRequest, categoryId))
+        {
+            response.setStatusCode("200");
+            response.setMessage("success");
+            return ResponseEntity.status(200).body(response);
+        }
+        response.setStatusCode("400");
+        response.setMessage("bad request");
+        return ResponseEntity.status(400).body(response);
     }
 
 }
