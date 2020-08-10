@@ -55,7 +55,7 @@ public class ItemController {
         return ResponseEntity.status(400).body(response);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{itemId}")
     @PreAuthorize("@appAuthorizer.authorize(authentication, {'manager'})")
     public ResponseEntity<HttpResponse> deleteItem(HttpServletRequest httpServletRequest,
                                                    @PathVariable String itemId)
@@ -70,7 +70,7 @@ public class ItemController {
         }
         response.setStatusCode("400");
         response.setMessage("bad request");
-        return ResponseEntity.status(200).body(response);
+        return ResponseEntity.status(400).body(response);
     }
 
 

@@ -28,13 +28,13 @@ public class Shops extends BaseEntity{
     private Date contractTerm;
 
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "owner_id")
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Users owner;
 
-    @OneToMany(mappedBy = "shop")
+    @OneToMany(mappedBy = "shop", cascade = CascadeType.REMOVE)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Collection<Languages> languages;
@@ -45,17 +45,17 @@ public class Shops extends BaseEntity{
     private Collection<Logs> logs;
 
 
-    @ManyToMany(mappedBy = "shops",  fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "shops",  fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Collection<Payments> payments;
 
-    @OneToMany(mappedBy = "shop",  fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "shop",  fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Collection<Orders> orders;
 
-    @OneToMany(mappedBy = "shop",  fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "shop",  fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Collection<Categories> categories;

@@ -6,6 +6,7 @@ import com.multiple_language_menu.models.entities.Items;
 import com.multiple_language_menu.models.entities.Users;
 import com.multiple_language_menu.models.request.ReqCreateItem;
 import com.multiple_language_menu.models.request.ReqEditItem;
+import com.multiple_language_menu.models.responses.dataResponse.ResCategory;
 import com.multiple_language_menu.repositories.*;
 import com.multiple_language_menu.services.authorize.AttributeTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,12 +43,17 @@ public class ItemService {
 
     @Autowired
     JavaMailSender emailSender;
+
+    @Autowired
+    CategoryService categoryService;
     public Boolean createItem(HttpServletRequest httpRequest, ReqCreateItem requestData)
     {
         try {
             String token = httpRequest.getHeader("Authorization");
             Categories category = categoryRepository.getOne(requestData.getCategoryId());
-            if(!category.getShop().getOwner().getEnable())
+            if(!category.getShop().getOwner().getEnable() ||
+                    (categoryService.getChildByCategoryId(requestData.getCategoryId(),"vi").size() > 0 &&
+                        categoryService.getChildByCategoryId(requestData.getCategoryId(),"vi").get(0) instanceof ResCategory))
             {
                 return false;
             }
@@ -159,13 +165,12 @@ public class ItemService {
             String token = httpRequest.getHeader("Authorization");
             Boolean checkAccess = false;
             Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
-            if(AttributeTokenService.checkAccess(token,"manager"))
+            if(AttributeTokenService.checkAccess(token,"root") ||
+                    (AttributeTokenService.checkAccess(token,"manager") &&
+                            user.getId().equals(item.getCreatedBy()))
+            )
             {
-                //check Owner
-                if(user.getId().equals(item.getCreatedBy()))
-                {
-                    checkAccess = true;
-                }
+                checkAccess = true;
             }
             else {
                 checkAccess = false;

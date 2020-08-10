@@ -6,11 +6,12 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResLogin {
     String token;
-    ArrayList<String> role;
+    List roles;
 }

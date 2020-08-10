@@ -31,6 +31,6 @@ public class Categories extends BaseEntity{
     @ToString.Exclude
     private Collection<Items> items;
 
-    @OneToMany(mappedBy = "category" )
+    @OneToMany(mappedBy = "category")
     private Collection<CategoriesTranslates> categoriesTranslates;
 }

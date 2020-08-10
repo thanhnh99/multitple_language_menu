@@ -3,17 +3,34 @@ package com.multiple_language_menu.services;
 import com.multiple_language_menu.job.TranslateProcess;
 import com.multiple_language_menu.models.entities.*;
 import com.multiple_language_menu.models.request.ReqCreateCategory;
+import com.multiple_language_menu.models.request.ReqCreateItem;
 import com.multiple_language_menu.models.request.ReqEditCategory;
 import com.multiple_language_menu.models.responses.dataResponse.ResCategory;
 import com.multiple_language_menu.models.responses.dataResponse.ResItem;
 import com.multiple_language_menu.repositories.*;
 import com.multiple_language_menu.services.authorize.AttributeTokenService;
+import org.apache.poi.hssf.usermodel.HSSFShape;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -45,6 +62,9 @@ public class CategoryService {
     @Autowired
     JavaMailSender emailSender;
 
+    @Autowired
+    ItemService itemService;
+
 
     public Boolean createCategory(HttpServletRequest httpRequest, ReqCreateCategory requestData)
     {
@@ -60,6 +80,10 @@ public class CategoryService {
             if(requestData.getParentCategory() != null)
             {
                 parentCategory = categoryRepository.findById(requestData.getParentCategory()).get();
+                if(parentCategory.getCategoriesParent() != null ||parentCategory.getItems().size() > 0)
+                {
+                    return false;
+                }
             }
             Categories newCategory = new Categories();
             newCategory.setName(requestData.getCategoryName());
@@ -91,6 +115,65 @@ public class CategoryService {
         }
     }
 
+
+    public boolean uploadCSV(HttpServletRequest httpRequest, MultipartFile file)
+    {
+        try {
+            Users users = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(httpRequest.getHeader("Authorization")));
+            Shops shops = shopRepository.findByOwner(users);
+            if(shops.getCategories().size() == 0)
+            {
+                InputStream inputStream = file.getInputStream();
+                XSSFWorkbook workbook = new XSSFWorkbook(inputStream);
+                XSSFSheet sheet = workbook.getSheetAt(0);
+                Iterator<Row> rowIterator = sheet.iterator();
+                Integer index =0;
+                while (rowIterator.hasNext())
+                {
+                    System.out.println(rowIterator.hasNext());
+
+
+                    Cell type = sheet.getRow(index).getCell(0);
+                    Cell parent = sheet.getRow(index).getCell(1);
+                    Cell name = sheet.getRow(index).getCell(2);
+                    Cell description = sheet.getRow(index).getCell(3);
+                    Cell price = sheet.getRow(index).getCell(4);
+
+                    if(type.getNumericCellValue() == 1)
+                    {
+                        System.out.println("Create Category");
+                        ReqCreateCategory reqCreateCategory = new ReqCreateCategory();
+                        reqCreateCategory.setCategoryName(name.getStringCellValue());
+                        reqCreateCategory.setParentCategory(parent.getStringCellValue());
+                        reqCreateCategory.setShopId(shops.getId());
+                        this.createCategory(httpRequest,reqCreateCategory);
+                    }
+                    else if(type.getNumericCellValue() == 2)
+                    {
+                        ReqCreateItem reqCreateItem = new ReqCreateItem();
+                        reqCreateItem.setCategoryId(parent.getStringCellValue());
+                        reqCreateItem.setDescription(description.getStringCellValue());
+                        reqCreateItem.setItemName(name.getStringCellValue());
+                        reqCreateItem.setPrice(new BigDecimal(price.getNumericCellValue()));
+                        itemService.createItem(httpRequest, reqCreateItem);
+                        System.out.println("Create Item");
+                    }
+                    else
+                    {
+                        System.out.println("Err readFile");
+                        break;
+                    }
+                    index++;
+                }
+                return true;
+            }
+            return false;
+        } catch (Exception e)
+        {
+            System.out.println("Err in CategoryService.readDataByFile: " + e.getMessage());
+            return false;
+        }
+    }
 
     public Boolean editCategory(HttpServletRequest httpRequest,
                                 ReqEditCategory requestData)

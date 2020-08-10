@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+#Project
+./src/main/java/com/multiple_language_menu/enums/MailConstants.java

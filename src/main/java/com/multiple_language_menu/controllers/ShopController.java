@@ -22,7 +22,6 @@ public class ShopController {
 
     @PostMapping()
     @PreAuthorize("@appAuthorizer.authorize(authentication, {'root', 'admin'})")
-//    "@appAuthorizer.checkEnable(true)")
     public ResponseEntity<HttpResponse> addShop(HttpServletRequest httpRequest, @RequestBody ReqCreateShop requestData)
     {
         HttpResponse<ResShop> response = new HttpResponse();

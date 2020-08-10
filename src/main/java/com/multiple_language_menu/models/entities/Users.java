@@ -1,14 +1,13 @@
 package com.multiple_language_menu.models.entities;
 
+import com.multiple_language_menu.models.auth.GranAuthorityImpl;
 import lombok.*;
 import org.hibernate.validator.constraints.UniqueElements;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Data
@@ -22,7 +21,7 @@ public class Users extends BaseEntity{
     private String email;
     private Boolean enable = true;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_role",
             joinColumns =  @JoinColumn(name = "user_id"),
@@ -49,4 +48,20 @@ public class Users extends BaseEntity{
         this.roles.add(role);
     }
 
+    public List<GranAuthorityImpl> getRolesAuthority(){
+        return this.roles.stream().map(role -> {
+            return new GranAuthorityImpl(role.getName());
+        }).collect(Collectors.toList());
+    }
+
+    public List<String> getRoles()
+    {
+        List<Roles> roles = (List<Roles>) this.roles;
+        List<String> listRole = new ArrayList<>();
+        for (Roles role : roles)
+        {
+            listRole.add(role.getCode());
+        }
+        return listRole;
+    }
 }

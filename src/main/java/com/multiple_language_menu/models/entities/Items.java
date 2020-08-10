@@ -23,7 +23,7 @@ public class Items extends BaseEntity{
     private Categories category;
 
 
-    @OneToMany(mappedBy = "item")
+    @OneToMany(mappedBy = "item", cascade = CascadeType.REMOVE)
     private Collection<ItemsTranslates> itemsTranslates;
 
     @OneToMany(mappedBy = "item")
