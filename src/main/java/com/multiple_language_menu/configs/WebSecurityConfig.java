@@ -59,24 +59,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .authorizeRequests()
-                .antMatchers(HttpMethod.GET,  "/shop/**", "category/**","/item/**").permitAll()
+                .antMatchers(HttpMethod.GET,  "/shop/**", "/category/**","/item/**").permitAll()
                 .antMatchers(HttpMethod.POST,"/login").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .csrf().disable()
                 .cors().disable()
-                // disable page caching
                 .headers().cacheControl();
         httpSecurity
                 .addFilterBefore( jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
     }
-//    @Autowired
-//    public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
-//        auth.jdbcAuthentication().dataSource(dataSource.dataSource())
-//                .usersByUsernameQuery("select username,password,enable from users where username=?")
-//                .authoritiesByUsernameQuery("select users.username,  roles.name from roles inner join user_role on roles.id = user_role.role_id" +
-//                        " inner join users on user_role.user_id = users.id where users.username=?");
-//                .passwordEncoder(new BCryptPasswordEncoder());
-//    }
-
 }

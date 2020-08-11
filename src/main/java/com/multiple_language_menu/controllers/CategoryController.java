@@ -29,12 +29,7 @@ public class CategoryController {
     CategoryService categoryService;
 
     @GetMapping()
-//    @RolesAllowed({ "ROLE_ROOT" })
-//    @PreAuthorize("@appAuthorizer.authorize(authentication, {'root', 'admin'})")
     public ResponseEntity<?> getCategories(HttpServletRequest request)
-//                                @RequestParam(required = true) String page,
-//                                @RequestParam(required = true) String pagesize,
-//                                @RequestParam(required = false) String shopId)
     {
         HttpResponse<List<ResCategory>> httpResponse = new HttpResponse<>();
         List<ResCategory> responseData = (List) categoryService.getCategoryByShopId(request);
@@ -44,7 +39,6 @@ public class CategoryController {
             httpResponse.setMessage("success");
             httpResponse.setData(responseData);
             return new ResponseEntity(responseData, HttpStatus.OK);
-//            return ResponseEntity.status(200).body(httpResponse);
 
         }
         httpResponse.setStatusCode("400");
