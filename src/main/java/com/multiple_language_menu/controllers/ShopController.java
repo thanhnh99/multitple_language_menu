@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
@@ -22,8 +23,10 @@ public class ShopController {
 
     @PostMapping()
     @PreAuthorize("@appAuthorizer.authorize(authentication, {'root', 'admin'})")
-    public ResponseEntity<HttpResponse> addShop(HttpServletRequest httpRequest, @RequestBody ReqCreateShop requestData)
+    public ResponseEntity<HttpResponse> addShop(HttpServletRequest httpRequest, @RequestParam ReqCreateShop requestData)
     {
+
+        System.out.println(requestData.toString());
         HttpResponse<ResShop> response = new HttpResponse();
         Boolean responseData = shopService.createShop(httpRequest, requestData);
         if(responseData)
@@ -38,6 +41,28 @@ public class ShopController {
         response.setData(null);
         return ResponseEntity.status(400).body(response);
     }
+
+    @PostMapping("{shopId}")
+    @PreAuthorize("@appAuthorizer.authorize(authentication, {'root', 'manager'})")
+    public ResponseEntity<HttpResponse> uploadCoverImage(HttpServletRequest httpRequest,
+                                                         @PathVariable(name = "shopId") String shopId,
+                                                         @RequestParam("coverImage") MultipartFile coverImage)
+    {
+        HttpResponse response = new HttpResponse();
+        Boolean responseData = shopService.uploadCoverImage(httpRequest,shopId, coverImage);
+        if(responseData)
+        {
+            response.setStatusCode("200");
+            response.setMessage("success");
+            response.setData(null);
+            return ResponseEntity.ok(response);
+        }
+        response.setStatusCode("400");
+        response.setMessage("bad request");
+        response.setData(null);
+        return ResponseEntity.status(400).body(response);
+    }
+
 
     @GetMapping()
     @PreAuthorize("@appAuthorizer.authorize(authentication, {'root', 'admin', 'manager'})")

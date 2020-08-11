@@ -13,11 +13,19 @@ import com.multiple_language_menu.repositories.IShopRepository;
 import com.multiple_language_menu.repositories.IUserRepository;
 import com.multiple_language_menu.services.authorize.AttributeTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,7 +38,6 @@ public class ShopService {
     UserService userService;
     @Autowired
     LanguageService languageService;
-
 
     @Autowired
     IUserRepository userRepository;
@@ -110,6 +117,48 @@ public class ShopService {
         return false;
     }
 
+
+    public Boolean uploadCoverImage(HttpServletRequest httpRequest,
+                                    String shopId,
+                                    MultipartFile coverImage)
+    {
+        try {
+            boolean checkAccess = false;
+            String token = httpRequest.getHeader("Authorization");
+            Shops shop = shopRepository.findById(shopId).get();
+            Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
+            if (AttributeTokenService.checkAccess(token, "root") ||
+                    (AttributeTokenService.checkAccess(token, "manager") &&
+                            shop.getOwner().getId().equals(user.getId())))
+            {
+                checkAccess = true;
+            }
+            if(checkAccess)
+            {
+                //todo upload image and get link image
+                Path root = Paths.get("uploads");
+
+//                Files.createDirectory(root);
+                Files.copy(coverImage.getInputStream(), root.resolve(System.currentTimeMillis() + coverImage.getOriginalFilename()));
+                String filename = new String();
+                Path file = root.resolve(filename);
+                UrlResource resource = new UrlResource(file.toUri());
+                if (resource.exists() || resource.isReadable()) {
+                    String coverLink = resource.getURL().toString();
+                    shop.setCoverImage(coverLink);
+                    shopRepository.save(shop);
+                    return true;
+                } else {
+                    throw new RuntimeException("Could not read the file!");
+                }
+            }
+            return false;
+        } catch (Exception e)
+        {
+            System.out.println("Err in ShopService.uploadCoverImage");
+            return false;
+        }
+    }
 
 
     public List<ResShop> getShops(HttpServletRequest httpRequest)
