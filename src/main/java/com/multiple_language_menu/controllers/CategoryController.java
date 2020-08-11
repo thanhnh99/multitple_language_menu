@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -108,12 +109,19 @@ public class CategoryController {
     public ResponseEntity<HttpResponse> uploadCsv(HttpServletRequest httpRequest,
                                                   @RequestParam("file") MultipartFile file)
     {
-        categoryService.uploadCSV(httpRequest, file);
         HttpResponse response = new HttpResponse();
-        response.setStatusCode("200");
-        response.setMessage("success");
-        response.setMessage("success");
-        return ResponseEntity.status(200).body(response);
+        if(categoryService.uploadCSV(httpRequest, file))
+        {
+            response.setStatusCode("200");
+            response.setMessage("success");
+            return ResponseEntity.status(200).body(response);
+        }
+        else
+        {
+            response.setStatusCode("400");
+            response.setMessage("bad request");
+            return ResponseEntity.status(400).body(response);
+        }
     }
 
     @DeleteMapping("/{categoryId}")

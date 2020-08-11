@@ -5,6 +5,7 @@ import com.multiple_language_menu.models.entities.Categories;
 import com.multiple_language_menu.models.entities.Items;
 import com.multiple_language_menu.models.entities.Users;
 import com.multiple_language_menu.models.request.ReqCreateItem;
+import com.multiple_language_menu.models.request.ReqCreateItemFromCSV;
 import com.multiple_language_menu.models.request.ReqEditItem;
 import com.multiple_language_menu.models.responses.dataResponse.ResCategory;
 import com.multiple_language_menu.repositories.*;
@@ -51,9 +52,7 @@ public class ItemService {
         try {
             String token = httpRequest.getHeader("Authorization");
             Categories category = categoryRepository.getOne(requestData.getCategoryId());
-            if(!category.getShop().getOwner().getEnable() ||
-                    (categoryService.getChildByCategoryId(requestData.getCategoryId(),"vi").size() > 0 &&
-                        categoryService.getChildByCategoryId(requestData.getCategoryId(),"vi").get(0) instanceof ResCategory))
+            if(!category.getShop().getOwner().getEnable() || category.getChildCategory().size() > 0)
             {
                 return false;
             }
@@ -65,6 +64,10 @@ public class ItemService {
                 Items newItem = new Items(requestData);
                 newItem.setCategory(category);
                 newItem.setRank(category.getItems().size());
+                if(requestData instanceof ReqCreateItemFromCSV)
+                {
+                    newItem.setId(((ReqCreateItemFromCSV) requestData).getCode());
+                }
                 itemRepository.save(newItem);
                 translateProcess.translateItem(newItem,
                         itemTranslateRepository,

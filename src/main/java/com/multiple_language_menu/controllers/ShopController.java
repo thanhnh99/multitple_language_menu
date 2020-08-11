@@ -23,10 +23,9 @@ public class ShopController {
 
     @PostMapping()
     @PreAuthorize("@appAuthorizer.authorize(authentication, {'root', 'admin'})")
-    public ResponseEntity<HttpResponse> addShop(HttpServletRequest httpRequest, @RequestParam ReqCreateShop requestData)
+    public ResponseEntity<HttpResponse> addShop(HttpServletRequest httpRequest, @RequestBody ReqCreateShop requestData)
     {
 
-        System.out.println(requestData.toString());
         HttpResponse<ResShop> response = new HttpResponse();
         Boolean responseData = shopService.createShop(httpRequest, requestData);
         if(responseData)

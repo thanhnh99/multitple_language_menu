@@ -72,11 +72,17 @@ public class TranslateItemJob implements Job {
 
     private String translate(String content, String targetLanguageCode)
     {
-        String url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + targetLanguageCode + "&dt=t&q=" + content;
-        RestTemplate restTemplate = new RestTemplate();
-        String result = restTemplate.getForObject(url, String.class);
-        JsonArray convertedObject = new Gson().fromJson(result, JsonArray.class);
-        String targetResult = convertedObject.get(0).getAsJsonArray().get(0).getAsJsonArray().get(0).toString();
-        return targetResult.substring(1,targetResult.length()-1);
+        try {
+            String url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + targetLanguageCode + "&dt=t&q=" + content;
+            RestTemplate restTemplate = new RestTemplate();
+            String result = restTemplate.getForObject(url, String.class);
+            JsonArray convertedObject = new Gson().fromJson(result, JsonArray.class);
+            String targetResult = convertedObject.get(0).getAsJsonArray().get(0).getAsJsonArray().get(0).toString();
+            return targetResult.substring(1,targetResult.length()-1);
+        }catch (Exception e)
+        {
+            System.out.println("Err in TranslateItemJob.translate: " + e.getMessage());
+            return null;
+        }
     }
 }

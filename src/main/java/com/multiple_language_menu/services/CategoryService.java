@@ -2,9 +2,7 @@ package com.multiple_language_menu.services;
 
 import com.multiple_language_menu.job.TranslateProcess;
 import com.multiple_language_menu.models.entities.*;
-import com.multiple_language_menu.models.request.ReqCreateCategory;
-import com.multiple_language_menu.models.request.ReqCreateItem;
-import com.multiple_language_menu.models.request.ReqEditCategory;
+import com.multiple_language_menu.models.request.*;
 import com.multiple_language_menu.models.responses.dataResponse.ResCategory;
 import com.multiple_language_menu.models.responses.dataResponse.ResItem;
 import com.multiple_language_menu.repositories.*;
@@ -77,7 +75,7 @@ public class CategoryService {
             }
             Users manager = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
             Categories parentCategory = null;
-            if(requestData.getParentCategory() != null)
+            if(requestData.getParentCategory() != null && !requestData.getParentCategory().equals(""))
             {
                 parentCategory = categoryRepository.findById(requestData.getParentCategory()).get();
                 if(parentCategory.getCategoriesParent() != null ||parentCategory.getItems().size() > 0)
@@ -90,6 +88,10 @@ public class CategoryService {
             newCategory.setDescription(requestData.getDescription());
             newCategory.setShop(shop);
             newCategory.setCreatedBy(manager.getId());
+            if(requestData instanceof ReqCreateCategoryFromCSV)
+            {
+                newCategory.setId(((ReqCreateCategoryFromCSV) requestData).getCode());
+            }
             newCategory.setCategoriesParent(parentCategory);
             if(parentCategory != null)
             {
@@ -127,7 +129,7 @@ public class CategoryService {
                 XSSFWorkbook workbook = new XSSFWorkbook(inputStream);
                 XSSFSheet sheet = workbook.getSheetAt(0);
                 Iterator<Row> rowIterator = sheet.iterator();
-                Integer index =0;
+                Integer index =1;
                 while (rowIterator.hasNext())
                 {
                     System.out.println(rowIterator.hasNext());
@@ -135,14 +137,16 @@ public class CategoryService {
 
                     Cell type = sheet.getRow(index).getCell(0);
                     Cell parent = sheet.getRow(index).getCell(1);
-                    Cell name = sheet.getRow(index).getCell(2);
-                    Cell description = sheet.getRow(index).getCell(3);
-                    Cell price = sheet.getRow(index).getCell(4);
+                    Cell code = sheet.getRow(index).getCell(2);
+                    Cell name = sheet.getRow(index).getCell(3);
+                    Cell description = sheet.getRow(index).getCell(4);
+                    Cell price = sheet.getRow(index).getCell(5);
 
                     if(type.getNumericCellValue() == 1)
                     {
                         System.out.println("Create Category");
-                        ReqCreateCategory reqCreateCategory = new ReqCreateCategory();
+                        ReqCreateCategoryFromCSV reqCreateCategory = new ReqCreateCategoryFromCSV();
+                        reqCreateCategory.setCode(code.getStringCellValue() + shops.getId());
                         reqCreateCategory.setCategoryName(name.getStringCellValue());
                         reqCreateCategory.setParentCategory(parent.getStringCellValue());
                         reqCreateCategory.setShopId(shops.getId());
@@ -150,8 +154,9 @@ public class CategoryService {
                     }
                     else if(type.getNumericCellValue() == 2)
                     {
-                        ReqCreateItem reqCreateItem = new ReqCreateItem();
-                        reqCreateItem.setCategoryId(parent.getStringCellValue());
+                        ReqCreateItemFromCSV reqCreateItem = new ReqCreateItemFromCSV();
+                        reqCreateItem.setCode(code.getStringCellValue());
+                        reqCreateItem.setCategoryId(parent.getStringCellValue() + shops.getId());
                         reqCreateItem.setDescription(description.getStringCellValue());
                         reqCreateItem.setItemName(name.getStringCellValue());
                         reqCreateItem.setPrice(new BigDecimal(price.getNumericCellValue()));
