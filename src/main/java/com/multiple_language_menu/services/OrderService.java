@@ -43,6 +43,7 @@ public class OrderService {
             Shops shop = shopRepository.findById(requestData.getShopId()).get();
             Orders newOrder = new Orders();
             newOrder.setShop(shop);
+            orderRepository.save(newOrder);
             for(ReqItemData itemData : requestData.getItemList())
             {
                 Items item = itemRepository.findById(itemData.getItemId()).get();
@@ -52,7 +53,6 @@ public class OrderService {
                 newOrderDetail.setOrder(newOrder);
                 orderDetailRepository.save(newOrderDetail);
             }
-            orderRepository.save(newOrder);
             ReqCreateLog reqCreateLog = new ReqCreateLog();
             reqCreateLog.setAction("ORDER");
             reqCreateLog.setActionType(EActionType.ORDER);
