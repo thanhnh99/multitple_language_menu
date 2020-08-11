@@ -259,7 +259,7 @@ public class CategoryService {
     {
         try {
             //check Access
-            Categories category = categoryRepository.getOne(categoryId);
+            Categories category = categoryRepository.findById(categoryId).get();
             if(category == null || !category.getShop().getOwner().getEnable())
             {
                 return false;
