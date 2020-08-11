@@ -1,9 +1,7 @@
 package com.multiple_language_menu.models.entities;
 
 import com.multiple_language_menu.models.request.ReqTranslateCategory;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 
@@ -20,6 +18,8 @@ public class CategoriesTranslates extends BaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "category_id")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Categories category;
 
     public CategoriesTranslates(ReqTranslateCategory requestData)

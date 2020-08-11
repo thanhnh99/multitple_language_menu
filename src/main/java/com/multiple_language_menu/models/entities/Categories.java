@@ -16,9 +16,12 @@ public class Categories extends BaseEntity{
     private String description;
     private Integer rank;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "parent_id", nullable = true)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Categories categoriesParent;
+
 
     @ManyToOne
     @JoinColumn(name = "shop_id")
@@ -26,11 +29,14 @@ public class Categories extends BaseEntity{
     @ToString.Exclude
     private Shops shop;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category", cascade = CascadeType.REMOVE)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Collection<Items> items;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category", cascade = CascadeType.REMOVE)
     private Collection<CategoriesTranslates> categoriesTranslates;
+
+    @OneToMany(mappedBy = "categoriesParent", cascade = CascadeType.REMOVE)
+    private Collection<Categories> childCategory;
 }

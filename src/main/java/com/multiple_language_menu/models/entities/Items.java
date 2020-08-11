@@ -20,6 +20,8 @@ public class Items extends BaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "category_id")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Categories category;
 
 
