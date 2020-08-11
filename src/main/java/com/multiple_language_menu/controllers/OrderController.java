@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("log")
+@RequestMapping("order")
 public class OrderController {
 
     @Autowired
@@ -30,7 +30,7 @@ public class OrderController {
             httpResponse.setStatusCode("200");
             httpResponse.setMessage("success");
             httpResponse.setData(responseData);
-            return new ResponseEntity(responseData, HttpStatus.OK);
+            return ResponseEntity.status(200).body(httpResponse);
 
         }
         httpResponse.setStatusCode("400");
