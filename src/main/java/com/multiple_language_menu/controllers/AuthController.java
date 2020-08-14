@@ -26,10 +26,6 @@ public class AuthController {
     @Autowired
     AuthenticationManager authenticationManager;
 
-    @Autowired
-    private JwtTokenProvider tokenProvider;
-
-
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody ReqLogin request)
     {

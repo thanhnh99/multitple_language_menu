@@ -1,5 +1,6 @@
 package com.multiple_language_menu.services;
 
+import com.multiple_language_menu.constants.RoleConstant;
 import com.multiple_language_menu.models.entities.Logs;
 import com.multiple_language_menu.models.entities.Shops;
 import com.multiple_language_menu.models.entities.Users;
@@ -34,7 +35,7 @@ public class LogService {
         String token = request.getHeader("Authorization");
         String username = AttributeTokenService.getUsernameFromToken(token);
         Users user = userRepository.findByUsername(username);
-        if(AttributeTokenService.checkAccess(token,"root"))
+        if(AttributeTokenService.checkAccess(token, RoleConstant.ROOT))
         {
             //GetAll log
             List<Logs> logs = logRepository.findAllByOrderByCreatedAtDesc();
@@ -44,7 +45,7 @@ public class LogService {
                 resLogs.add(resLog);
             }
         }
-        else if(AttributeTokenService.checkAccess(token,"admin"))
+        else if(AttributeTokenService.checkAccess(token,RoleConstant.ADMIN))
         {
             //GetAll log by Shop created_by
             List<Shops> shops = shopRepository.findByCreatedBy(user.getId());
@@ -58,7 +59,7 @@ public class LogService {
                 }
             }
         }
-        else if(AttributeTokenService.checkAccess(token,"manager"))
+        else if(AttributeTokenService.checkAccess(token,RoleConstant.MANAGER))
         {
             //Getall log by shop Owner
             Shops shop = shopRepository.findByOwner(user);

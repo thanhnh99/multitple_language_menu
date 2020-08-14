@@ -1,4 +1,4 @@
-package com.multiple_language_menu.enums;
+package com.multiple_language_menu.constants;
 
 import java.util.ArrayList;
 import java.util.List;

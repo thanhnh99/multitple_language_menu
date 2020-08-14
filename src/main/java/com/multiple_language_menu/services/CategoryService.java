@@ -1,5 +1,8 @@
 package com.multiple_language_menu.services;
 
+import com.multiple_language_menu.constants.EActionType;
+import com.multiple_language_menu.constants.RoleConstant;
+import com.multiple_language_menu.job.LogProcess;
 import com.multiple_language_menu.job.TranslateProcess;
 import com.multiple_language_menu.models.entities.*;
 import com.multiple_language_menu.models.request.*;
@@ -7,14 +10,8 @@ import com.multiple_language_menu.models.responses.dataResponse.ResCategory;
 import com.multiple_language_menu.models.responses.dataResponse.ResItem;
 import com.multiple_language_menu.repositories.*;
 import com.multiple_language_menu.services.authorize.AttributeTokenService;
-import org.apache.poi.hssf.usermodel.HSSFShape;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.util.CellAddress;
-import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -63,6 +58,9 @@ public class CategoryService {
     @Autowired
     ItemService itemService;
 
+    @Autowired
+    LogProcess logProcess;
+
 
     public Boolean createCategory(HttpServletRequest httpRequest, ReqCreateCategory requestData)
     {
@@ -95,13 +93,23 @@ public class CategoryService {
             newCategory.setCategoriesParent(parentCategory);
             if(parentCategory != null)
             {
-                newCategory.setRank(this.getChildByCategoryId(parentCategory.getId(),"vi").size());
+                newCategory.setRank(parentCategory.getChildCategory().size());
+                parentCategory.getChildCategory().add(newCategory);
+                parentCategory.setChildCategory(parentCategory.getChildCategory());
+                categoryRepository.save(parentCategory);
             }
             else
             {
                 newCategory.setRank(shop.getCategories().size());
+                shop.getCategories().add(newCategory);
+                shop.setCategories(shop.getCategories());
             }
             categoryRepository.save(newCategory);
+
+            // Create category Log
+            logProcess.createLog(new ReqCreateLog(newCategory, EActionType.ADD),
+                    shopRepository,
+                    logRepository);
 
             // translate schedule
             translateProcess.translateCategory(newCategory,
@@ -150,14 +158,15 @@ public class CategoryService {
                         reqCreateCategory.setCategoryName(name.getStringCellValue());
                         reqCreateCategory.setParentCategory(parent.getStringCellValue());
                         reqCreateCategory.setShopId(shops.getId());
+                        reqCreateCategory.setDescription(description.getStringCellValue());
                         this.createCategory(httpRequest,reqCreateCategory);
                     }
                     else if(type.getNumericCellValue() == 2)
                     {
                         ReqCreateItemFromCSV reqCreateItem = new ReqCreateItemFromCSV();
-                        reqCreateItem.setCode(code.getStringCellValue());
                         reqCreateItem.setCategoryId(parent.getStringCellValue() + shops.getId());
                         reqCreateItem.setDescription(description.getStringCellValue());
+                        reqCreateItem.setCode(code.getStringCellValue());
                         reqCreateItem.setItemName(name.getStringCellValue());
                         reqCreateItem.setPrice(new BigDecimal(price.getNumericCellValue()));
                         itemService.createItem(httpRequest, reqCreateItem);
@@ -176,7 +185,7 @@ public class CategoryService {
         } catch (Exception e)
         {
             System.out.println("Err in CategoryService.readDataByFile: " + e.getMessage());
-            return false;
+            return true;
         }
     }
 
@@ -195,8 +204,8 @@ public class CategoryService {
                 for (String categoryUpdateId : (List<String>) requestData.getCategoryIds())
                 {
                     Categories categoryUpdate = categoryRepository.findById(categoryUpdateId).get();
-                    if(AttributeTokenService.checkAccess(token,"root")
-                            ||(AttributeTokenService.checkAccess(token,"manager")&&
+                    if(AttributeTokenService.checkAccess(token, RoleConstant.ROOT)
+                            ||(AttributeTokenService.checkAccess(token,RoleConstant.MANAGER)&&
                             user.getId().equals(categoryUpdate.getShop().getOwner().getId())))
                     {
                         checkAccess = true;
@@ -215,14 +224,17 @@ public class CategoryService {
                         categoryUpdate.setRank(index++);
                         categoryRepository.save(categoryUpdate);
                     }
+                    logProcess.createLog(new ReqCreateLog(categoryRepository.findById(((List<String>) requestData.getCategoryIds()).get(0)).get(), EActionType.UPDATE_RANK),
+                            shopRepository,
+                            logRepository);
                     return true;
                 }
             }
             else if(requestData.getCategoryIds() instanceof  String) //update data
             {
                 Categories updateCategory = categoryRepository.findById((String) requestData.getCategoryIds()).get();
-                if(AttributeTokenService.checkAccess(token,"root")
-                        ||(AttributeTokenService.checkAccess(token,"manager")&&
+                if(AttributeTokenService.checkAccess(token,RoleConstant.ROOT)
+                        ||(AttributeTokenService.checkAccess(token,RoleConstant.MANAGER)&&
                         user.getId().equals(updateCategory.getShop().getOwner().getId())))
                 {
                     updateCategory.setName(requestData.getCategoryName());
@@ -235,6 +247,12 @@ public class CategoryService {
                         updateCategory.setRank(childCategories.size());
                     }
                     categoryRepository.save(updateCategory);
+
+                    //Create log
+                    logProcess.createLog(new ReqCreateLog(updateCategory, EActionType.UPDATE_DATA),
+                            shopRepository,
+                            logRepository);
+
                     // update translate data.
                     translateProcess.translateCategory(updateCategory,
                             categoryTranslateRepository,
@@ -273,11 +291,11 @@ public class CategoryService {
             String token = httpRequest.getHeader("Authorization");
             Boolean checkAccess = false;
             Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
-            if(AttributeTokenService.checkAccess(token,"root"))
+            if(AttributeTokenService.checkAccess(token,RoleConstant.ROOT))
             {
                 checkAccess = true;
             }
-            else if(AttributeTokenService.checkAccess(token,"admin"))
+            else if(AttributeTokenService.checkAccess(token,RoleConstant.ADMIN))
             {
                 //check CreateBY
                 if(user.getId().equals(category.getShop().getCreatedBy()))
@@ -285,7 +303,7 @@ public class CategoryService {
                     checkAccess = true;
                 }
             }
-            else if(AttributeTokenService.checkAccess(token,"manager"))
+            else if(AttributeTokenService.checkAccess(token,RoleConstant.MANAGER))
             {
                 //check Owner
                 if(user.getId().equals(category.getCreatedBy()))
@@ -299,6 +317,10 @@ public class CategoryService {
             if(checkAccess)
             {
                 categoryRepository.delete(category);
+                //Create log
+                logProcess.createLog(new ReqCreateLog(category, EActionType.DELETE),
+                        shopRepository,
+                        logRepository);
                 return true;
             }
             return false;
@@ -345,6 +367,11 @@ public class CategoryService {
                         if(categoriesTranslates == null)
                         {
                             resCategory = new ResCategory(category);
+                            translateProcess.translateCategory(category,
+                                    categoryTranslateRepository,
+                                    shopRepository,
+                                    logRepository,
+                                    emailSender);
 
                         }
                         else
@@ -370,14 +397,27 @@ public class CategoryService {
         try{
             List<Object> response = new ArrayList<Object>();
             Categories categoryParent = categoryRepository.findById(categoryId).get();
-            List<Categories> categories = categoryRepository.findCategoriesByCategoriesParent(categoryParent);
-            List<Items> items = itemRepository.findByCategory(categoryParent);
-            if(categories.size() > 0)
+            List<Categories> childCategories = (List<Categories>) categoryParent.getChildCategory();
+            List<Items> items = (List<Items>) categoryParent.getItems();
+            if(childCategories.size() > 0)
             {
-                for(Categories category : categories)
+                for(Categories category : childCategories)
                 {
+                    ResCategory  resCategory = null;
                     CategoriesTranslates categoryTranslate = categoryTranslateRepository.findByCategoryAndLanguageCode(category,languageCode);
-                    ResCategory  resCategory = new ResCategory(categoryTranslate);
+                    if(categoryTranslate != null)
+                    {
+                        resCategory = new ResCategory(categoryTranslate);
+                    }
+                    else
+                    {
+                        resCategory = new ResCategory(category);
+                        translateProcess.translateCategory(category,
+                                categoryTranslateRepository,
+                                shopRepository,
+                                logRepository,
+                                emailSender);
+                    }
                     response.add(resCategory);
                 }
             }
@@ -385,9 +425,22 @@ public class CategoryService {
             {
                 for(Items item : items)
                 {
+                    ResItem resItem = null;
                     ItemsTranslates itemTranslates = itemTranslateRepository.findByItemAndLanguageCode(item,languageCode);
-                    ResItem resCategory = new ResItem(itemTranslates);
-                    response.add(resCategory);
+                    if(itemTranslates != null)
+                    {
+                        resItem = new ResItem(itemTranslates);
+                    }
+                    else
+                    {
+                        resItem = new ResItem(item);
+                        translateProcess.translateItem(item,
+                                itemTranslateRepository,
+                                shopRepository,
+                                logRepository,
+                                emailSender);
+                    }
+                    response.add(resItem);
                 }
             }
             return response;

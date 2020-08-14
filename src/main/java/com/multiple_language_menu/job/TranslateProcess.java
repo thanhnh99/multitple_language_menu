@@ -1,9 +1,7 @@
 package com.multiple_language_menu.job;
 
-import com.multiple_language_menu.enums.LanguageConstant;
 import com.multiple_language_menu.models.entities.Categories;
 import com.multiple_language_menu.models.entities.Items;
-import com.multiple_language_menu.models.request.ReqTranslateItem;
 import com.multiple_language_menu.repositories.ICategoryTranslateRepository;
 import com.multiple_language_menu.repositories.IItemTranslateRepository;
 import com.multiple_language_menu.repositories.ILogRepository;
@@ -36,7 +34,7 @@ public class TranslateProcess {
                                   IShopRepository shopRepository,
                                   ILogRepository logRepository,
                                   JavaMailSender emailSender) throws SchedulerException {
-        List<String> languageCode = LanguageConstant.languageCode();
+        List<String> languageCode = requestData.getShop().getLanguageCodes();
         String identity = "translate-category" + requestData.getId() + "-" + System.currentTimeMillis();
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put("data", requestData);
@@ -48,12 +46,12 @@ public class TranslateProcess {
         jobDataMap.put("mailProcess", mailProcess);
         jobDataMap.put("emailSender", emailSender);
         JobDetail job = JobBuilder.newJob(TranslateCategoryJob.class)
-                .withIdentity(identity)
+//                .withIdentity(identity)
                 .withDescription("Translate category")
                 .usingJobData(jobDataMap)
                 .build();
         Trigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(identity)
+//                .withIdentity(identity)
                 .startNow()
                 .build();
         scheduler.start();
@@ -65,7 +63,7 @@ public class TranslateProcess {
                               IShopRepository shopRepository,
                               ILogRepository logRepository,
                               JavaMailSender emailSender) throws SchedulerException {
-        List<String> languageCode = LanguageConstant.languageCode();
+        List<String> languageCode = requestData.getCategory().getShop().getLanguageCodes();
         String identity = "translate-item" + requestData.getId() + "-" + System.currentTimeMillis();
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put("data", requestData);
@@ -77,12 +75,12 @@ public class TranslateProcess {
         jobDataMap.put("mailProcess", mailProcess);
         jobDataMap.put("emailSender", emailSender);
         JobDetail job = JobBuilder.newJob(TranslateItemJob.class)
-                .withIdentity(identity)
+//                .withIdentity(identity)
                 .withDescription("Translate item")
                 .usingJobData(jobDataMap)
                 .build();
         Trigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(identity)
+//                .withIdentity(identity)
                 .startNow()
                 .build();
         scheduler.start();

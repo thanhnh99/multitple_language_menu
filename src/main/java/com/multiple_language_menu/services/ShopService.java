@@ -1,13 +1,18 @@
 package com.multiple_language_menu.services;
 
+import com.multiple_language_menu.constants.EActionType;
+import com.multiple_language_menu.constants.RoleConstant;
+import com.multiple_language_menu.job.LogProcess;
 import com.multiple_language_menu.models.entities.Payments;
 import com.multiple_language_menu.models.entities.Shops;
 import com.multiple_language_menu.models.entities.Users;
 import com.multiple_language_menu.models.request.ReqCreateAdmin;
+import com.multiple_language_menu.models.request.ReqCreateLog;
 import com.multiple_language_menu.models.request.ReqCreateShop;
 import com.multiple_language_menu.models.request.ReqEditShop;
 import com.multiple_language_menu.models.responses.dataResponse.ResShop;
 import com.multiple_language_menu.models.responses.dataResponse.ResShopUser;
+import com.multiple_language_menu.repositories.ILogRepository;
 import com.multiple_language_menu.repositories.IPaymentRepository;
 import com.multiple_language_menu.repositories.IShopRepository;
 import com.multiple_language_menu.repositories.IUserRepository;
@@ -20,9 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,6 +48,10 @@ public class ShopService {
     IPaymentRepository paymentRepository;
     @Autowired
     IShopRepository shopRepository;
+    @Autowired
+    ILogRepository logRepository;
+    @Autowired
+    LogProcess logProcess;
 
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -94,10 +101,15 @@ public class ShopService {
                             payments,
                             new ArrayList<>(),
                             new ArrayList<>());
-                    shop.setLanguages(languageService.getLanguages());
+                    shop.setLanguages(new ArrayList<>());
                     shop.setCreatedBy(manager.getCreatedBy());
                     shopRepository.save(shop);
-                    languageService.addLanguage(shop.getId());
+                    languageService.addDefaultLanguage(shop.getId());
+
+                    //Create log
+                    logProcess.createLog(new ReqCreateLog(shop, EActionType.ADD),
+                            shopRepository,
+                            logRepository);
                     return true;
                 }
             }
@@ -127,15 +139,14 @@ public class ShopService {
             String token = httpRequest.getHeader("Authorization");
             Shops shop = shopRepository.findById(shopId).get();
             Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
-            if (AttributeTokenService.checkAccess(token, "root") ||
-                    (AttributeTokenService.checkAccess(token, "manager") &&
+            if (AttributeTokenService.checkAccess(token, RoleConstant.ROOT) ||
+                    (AttributeTokenService.checkAccess(token, RoleConstant.MANAGER) &&
                             shop.getOwner().getId().equals(user.getId())))
             {
                 checkAccess = true;
             }
             if(checkAccess)
             {
-                //todo upload image and get link image
                 Path root = Paths.get("uploads");
 
 //                Files.createDirectory(root);
@@ -147,6 +158,9 @@ public class ShopService {
                     String coverLink = resource.getURL().toString();
                     shop.setCoverImage(coverLink);
                     shopRepository.save(shop);
+                    logProcess.createLog(new ReqCreateLog(shop, EActionType.UPLOAD_COVER_IMAGE),
+                            shopRepository,
+                            logRepository);
                     return true;
                 } else {
                     throw new RuntimeException("Could not read the file!");
@@ -185,16 +199,16 @@ public class ShopService {
                 int pagesizeInt = Integer.parseInt(pagesize);
                 if(startDate == null && endDate == null)
                 {
-                    if(AttributeTokenService.checkAccess(token,"root"))
+                    if(AttributeTokenService.checkAccess(token,RoleConstant.ROOT))
                     {
                         shopsEntity = shopRepository.findAll(PageRequest.of(pageInt,pagesizeInt));
                     }
-                    else if(AttributeTokenService.checkAccess(token,"admin"))
+                    else if(AttributeTokenService.checkAccess(token,RoleConstant.ADMIN))
                     {
                         Users admin = userRepository.findByUsername(username);
                         shopsEntity = shopRepository.findByCreatedBy(admin.getId(), PageRequest.of(pageInt, pagesizeInt));
                     }
-                    else if(AttributeTokenService.checkAccess(token,"manager"))
+                    else if(AttributeTokenService.checkAccess(token,RoleConstant.MANAGER))
                     {
                         Users manager = userRepository.findByUsername(username);
                         shopsEntity = shopRepository.findByOwner(manager, PageRequest.of(pageInt, pagesizeInt));
@@ -206,17 +220,17 @@ public class ShopService {
                 else if(startDate != null && endDate ==null)
                 {
                     Date startDateFind = new SimpleDateFormat("dd/MM/yyyy").parse(startDate);
-                    if(AttributeTokenService.checkAccess(token,"root"))
+                    if(AttributeTokenService.checkAccess(token,RoleConstant.ROOT))
                     {
                         shopsEntity = shopRepository.findByContractTermAfter(startDateFind, PageRequest.of(pageInt, pagesizeInt));
                     }
-                    else if(AttributeTokenService.checkAccess(token,"admin"))
+                    else if(AttributeTokenService.checkAccess(token,RoleConstant.ADMIN))
                     {
                         Users admin = userRepository.findByUsername(username);
                         shopsEntity = shopRepository.findByCreatedByAndContractTermAfter
                                         (admin.getId(),startDateFind,  PageRequest.of(pageInt, pagesizeInt));
                     }
-                    else if(AttributeTokenService.checkAccess(token,"manager"))
+                    else if(AttributeTokenService.checkAccess(token,RoleConstant.MANAGER))
                     {
                         Users manager = userRepository.findByUsername(username);
                         shopsEntity = shopRepository.findByOwnerAndContractTermAfter
@@ -230,17 +244,17 @@ public class ShopService {
                 else if(startDate == null && endDate != null)
                 {
                     Date endDateFind = new SimpleDateFormat("dd/MM/yyyy").parse(endDate);
-                    if(AttributeTokenService.checkAccess(token,"root"))
+                    if(AttributeTokenService.checkAccess(token,RoleConstant.ROOT))
                     {
                         shopsEntity = shopRepository.findByContractTermBefore(endDateFind, PageRequest.of(pageInt, pagesizeInt));
                     }
-                    else if(AttributeTokenService.checkAccess(token,"admin"))
+                    else if(AttributeTokenService.checkAccess(token,RoleConstant.ADMIN))
                     {
                         Users admin = userRepository.findByUsername(username);
                         shopsEntity = shopRepository.findByCreatedByAndContractTermBefore
                                         (admin.getId(),endDateFind, PageRequest.of(pageInt, pagesizeInt) );
                     }
-                    else if(AttributeTokenService.checkAccess(token,"manager"))
+                    else if(AttributeTokenService.checkAccess(token,RoleConstant.MANAGER))
                     {
                         Users manager = userRepository.findByUsername(username);
                         shopsEntity = shopRepository.findByOwnerAndContractTermBefore
@@ -259,14 +273,14 @@ public class ShopService {
                     {
                         shopsEntity = shopRepository.findByContractTermBetween(startDateFind, endDateFind, PageRequest.of(pageInt, pagesizeInt) );
                     }
-                    else if(AttributeTokenService.checkAccess(token,"admin"))
+                    else if(AttributeTokenService.checkAccess(token,RoleConstant.ADMIN))
                     {
                         Users admin = userRepository.findByUsername(username);
                         shopsEntity = shopRepository
                                         .findByCreatedByAndContractTermBetween
                                         (admin.getId(),startDateFind,endDateFind, PageRequest.of(pageInt, pagesizeInt) );
                     }
-                    else if(AttributeTokenService.checkAccess(token,"manager"))
+                    else if(AttributeTokenService.checkAccess(token,RoleConstant.MANAGER))
                     {
                         Users manager = userRepository.findByUsername(username);
                         shopsEntity = shopRepository.findByOwnerAndContractTermBetween(
@@ -309,12 +323,12 @@ public class ShopService {
             String token = httpRequest.getHeader("Authorization");
             Boolean checkAccess = false;
             Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
-            if(AttributeTokenService.checkAccess(token,"root"))
+            if(AttributeTokenService.checkAccess(token,RoleConstant.ROOT))
             {
                 checkAccess = true;
                 shop.setContractTerm( new SimpleDateFormat("dd/MM/yyyy").parse(requestData.getContractTerm()));
             }
-            else if(AttributeTokenService.checkAccess(token,"admin"))
+            else if(AttributeTokenService.checkAccess(token,RoleConstant.ADMIN))
             {
                 //check CreateBY
                 if(user.getId().equals(shop.getCreatedBy()))
@@ -323,7 +337,7 @@ public class ShopService {
                     shop.setContractTerm( new SimpleDateFormat("dd/MM/yyyy").parse(requestData.getContractTerm()));
                 }
             }
-            else if(AttributeTokenService.checkAccess(token,"manager"))
+            else if(AttributeTokenService.checkAccess(token,RoleConstant.MANAGER))
             {
 
                 //check ownerId
@@ -374,6 +388,11 @@ public class ShopService {
                 shop.setUpdatedAt(new Date());
                 shop.setUpdatedBy(user.getId());
                 shopRepository.save(shop);
+
+                //Create log
+                logProcess.createLog(new ReqCreateLog(shop, EActionType.UPDATE_DATA),
+                        shopRepository,
+                        logRepository);
                 return true;
             }
         } catch (Exception e)
@@ -398,11 +417,11 @@ public class ShopService {
             String token = httpRequest.getHeader("Authorization");
             Boolean checkAccess = false;
             Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
-            if(AttributeTokenService.checkAccess(token,"root"))
+            if(AttributeTokenService.checkAccess(token,RoleConstant.ROOT))
             {
                 checkAccess = true;
             }
-            else if(AttributeTokenService.checkAccess(token,"admin"))
+            else if(AttributeTokenService.checkAccess(token,RoleConstant.ADMIN))
             {
                 //check CreateBY
                 if(user.getId().equals(shop.getCreatedBy()))
@@ -418,6 +437,11 @@ public class ShopService {
 
             {
                 shopRepository.delete(shop);
+
+                //Create log
+                logProcess.createLog(new ReqCreateLog(shop, EActionType.DELETE),
+                        shopRepository,
+                        logRepository);
                 return true;
             }
             return false;
@@ -449,10 +473,10 @@ public class ShopService {
             else
             {
                 Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
-                if(AttributeTokenService.checkAccess(token,"root")||
-                    (AttributeTokenService.checkAccess(token,"admin")
+                if(AttributeTokenService.checkAccess(token,RoleConstant.ROOT)||
+                    (AttributeTokenService.checkAccess(token,RoleConstant.ADMIN)
                             &&user.getId().equals(shop.getCreatedBy())) ||
-                    (AttributeTokenService.checkAccess(token,"manager")
+                    (AttributeTokenService.checkAccess(token,RoleConstant.MANAGER)
                             &&user.getId().equals(shop.getOwner().getId())))
                 {
                     ResShop response = new ResShop(shop);

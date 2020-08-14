@@ -1,5 +1,6 @@
 package com.multiple_language_menu.filters;
 
+import com.multiple_language_menu.models.auth.CustomUserDetail;
 import com.multiple_language_menu.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,8 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String userName = jwtTokenProvider.getUserNameFromJWT(jwt);
 
                 //Lấy thông tin người dùng từ userName
-                UserDetails userDetails = customUserDetailsService.loadUserByUsername(userName);
-                if (userDetails != null)
+                CustomUserDetail userDetails = (CustomUserDetail) customUserDetailsService.loadUserByUsername(userName);
+                if (userDetails != null && userDetails.getUser().getEnable())
                 {
                     //Nếu người dùng hợp lệ, set thông tin cho security Context
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

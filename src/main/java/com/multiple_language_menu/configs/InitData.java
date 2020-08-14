@@ -1,5 +1,6 @@
 package com.multiple_language_menu.configs;
 
+import com.multiple_language_menu.constants.RoleConstant;
 import com.multiple_language_menu.models.entities.*;
 import com.multiple_language_menu.repositories.ILanguageRepository;
 import com.multiple_language_menu.repositories.IPaymentRepository;
@@ -31,7 +32,7 @@ public class InitData {
     @Bean
     public void addRole()
     {
-        if (roleRepository.findByCode("root") == null)
+        if (roleRepository.findByCode(RoleConstant.ROOT) == null)
         {
             try {
                 Roles role = new Roles("ROOT","root");
@@ -42,7 +43,7 @@ public class InitData {
             }
 
         }
-        if (roleRepository.findByCode("admin") == null)
+        if (roleRepository.findByCode(RoleConstant.ADMIN) == null)
         {
             try {
                 Roles role = new Roles("ADMIN","admin");
@@ -53,7 +54,7 @@ public class InitData {
             }
 
         }
-        if (roleRepository.findByCode("manager") == null)
+        if (roleRepository.findByCode(RoleConstant.MANAGER) == null)
         {
             try {
                 Roles role = new Roles("MANAGER","manager");
@@ -71,7 +72,7 @@ public class InitData {
         if(userRepository.findByEmail("admin@gmail.com") == null)
         {
             try {
-                Roles role = roleRepository.findByCode("admin");
+                Roles role = roleRepository.findByCode(RoleConstant.ADMIN);
                 Users rootUser = new Users("adminname",passwordEncoder.encode("adminpass"),"admin@gmail.com", new Boolean(true));
                 rootUser.addRole(role);
                 userRepository.save(rootUser);
@@ -92,7 +93,7 @@ public class InitData {
         if(userRepository.findByEmail("root@gmail.com") == null)
         {
             try {
-                Roles role = roleRepository.findByCode("root");
+                Roles role = roleRepository.findByCode(RoleConstant.ROOT);
                 Users rootUser = new Users("rootname",passwordEncoder.encode("rootpass"),"root@gmail.com", new Boolean(true));
                 rootUser.addRole(role);
                 userRepository.save(rootUser);
@@ -132,11 +133,5 @@ public class InitData {
         }
     }
 
-
-    @Bean
-    public void addShop()
-    {
-
-    }
 
 }

@@ -1,7 +1,6 @@
 package com.multiple_language_menu.job;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
+import com.multiple_language_menu.constants.EActionType;
 import com.multiple_language_menu.models.entities.Categories;
 import com.multiple_language_menu.models.entities.CategoriesTranslates;
 import com.multiple_language_menu.models.request.ReqCreateLog;
@@ -16,7 +15,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
@@ -26,6 +24,7 @@ public class TranslateCategoryJob implements Job {
     @SneakyThrows
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
+        Boolean translateHasErr = false;
         System.out.println("Execute Translate category");
         Categories requestData = (Categories) context.getJobDetail().getJobDataMap().get("data");
         ICategoryTranslateRepository categoryTranslateRepository = (ICategoryTranslateRepository) context.getJobDetail().getJobDataMap().get("categoryTranslateRepository");
@@ -38,50 +37,72 @@ public class TranslateCategoryJob implements Job {
         for(String languageCode : languageCodes)
         {
             ReqTranslateCategory reqTranslateCategory = new ReqTranslateCategory(requestData);
-            reqTranslateCategory.setName(this.translate(reqTranslateCategory.getName(), languageCode));
-            reqTranslateCategory.setDescription(this.translate(requestData.getDescription(),languageCode));
-            try {
-                CategoriesTranslates categoriesTranslate = categoryTranslateRepository.findByCategoryAndLanguageCode(requestData,languageCode);
-                if(categoriesTranslate != null)
-                {
-                    categoriesTranslate.setName(reqTranslateCategory.getName());
-                    categoriesTranslate.setDescription(reqTranslateCategory.getDescription());
-                    categoryTranslateRepository.save(categoriesTranslate);
-                }
-                else
-                {
-                    categoriesTranslate = new CategoriesTranslates(reqTranslateCategory);
-                    categoriesTranslate.setCategory(requestData);
-                    categoriesTranslate.setLanguageCode(languageCode);
-                    categoryTranslateRepository.save(categoriesTranslate);
-                }
-
-            } catch (Exception e)
+            if(this.translate(reqTranslateCategory.getName(), languageCode) == null ||
+                    this.translate(requestData.getDescription(),languageCode) == null
+            )
             {
-                System.out.println("Err in TranslateCategory.excute: " + e.getMessage());
+                translateHasErr = true;
+            }
+            else
+            {
+                reqTranslateCategory.setName(this.translate(reqTranslateCategory.getName(), languageCode));
+                reqTranslateCategory.setDescription(this.translate(requestData.getDescription(),languageCode));
+                try {
+                    CategoriesTranslates categoriesTranslate = categoryTranslateRepository.findByCategoryAndLanguageCode(requestData,languageCode);
+                    if(categoriesTranslate != null)
+                    {
+                        categoriesTranslate.setName(reqTranslateCategory.getName());
+                        categoriesTranslate.setDescription(reqTranslateCategory.getDescription());
+                        categoryTranslateRepository.save(categoriesTranslate);
+                    }
+                    else
+                    {
+                        categoriesTranslate = new CategoriesTranslates(reqTranslateCategory);
+                        categoriesTranslate.setCategory(requestData);
+                        categoriesTranslate.setLanguageCode(languageCode);
+                        categoryTranslateRepository.save(categoriesTranslate);
+                    }
+
+                } catch (Exception e)
+                {
+                    System.out.println("Err in TranslateCategory.excute: " + e.getMessage());
+                }
             }
         }
-        ReqCreateLog reqCreateLog = new ReqCreateLog(requestData);
-        logProcess.createLog(reqCreateLog,shopRepository,logRepository);
-        ReqSendMail reqSendMail = new ReqSendMail(requestData.getShop().getOwner().getEmail(),
-                "CATEGORY " + requestData.getName() + " HAS TRANSLATED",
-                " CATEGORY " + requestData.getName() + " HAS TRANSLATED");
-        mailProcess.sendMail(reqSendMail,emailSender);
+        if(!translateHasErr)
+        {
+            ReqCreateLog reqCreateLog = new ReqCreateLog(requestData, EActionType.TRANSLATE);
+            logProcess.createLog(reqCreateLog,shopRepository,logRepository);
+            ReqSendMail reqSendMail = new ReqSendMail(requestData.getShop().getOwner().getEmail(),
+                    "CATEGORY " + requestData.getName() + " HAS TRANSLATED",
+                    " CATEGORY " + requestData.getName() + " HAS TRANSLATED");
+            mailProcess.sendMail(reqSendMail,emailSender);
+        }
+        else
+        {
+            ReqCreateLog reqCreateLog = new ReqCreateLog(requestData, EActionType.TRANSLATE);
+            logProcess.createLog(reqCreateLog,shopRepository,logRepository);
+            ReqSendMail reqSendMail = new ReqSendMail(requestData.getShop().getOwner().getEmail(),
+                    "CATEGORY " + requestData.getName() + " TRANSLATE HAS ERROR",
+                    " CATEGORY " + requestData.getName() + " TRANSLATE HAS ERROR");
+            mailProcess.sendMail(reqSendMail,emailSender);
+        }
     }
 
     private String translate(String content, String targetLanguageCode)
     {
-        try {
-            String url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + targetLanguageCode + "&dt=t&q=" + content;
-            RestTemplate restTemplate = new RestTemplate();
-            String result = restTemplate.getForObject(url, String.class);
-            JsonArray convertedObject = new Gson().fromJson(result, JsonArray.class);
-            String targetResult = convertedObject.get(0).getAsJsonArray().get(0).getAsJsonArray().get(0).toString();
-            return targetResult.substring(1,targetResult.length()-1);
-        } catch (Exception e)
-        {
-            System.out.println("Err in TranslateCategoryJob.translate: " + e.getMessage());
-            return null;
-        }
+//        try {
+//            String url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + targetLanguageCode + "&dt=t&q=" + content;
+//            RestTemplate restTemplate = new RestTemplate();
+//            String result = restTemplate.getForObject(url, String.class);
+//            JsonArray convertedObject = new Gson().fromJson(result, JsonArray.class);
+//            String targetResult = convertedObject.get(0).getAsJsonArray().get(0).getAsJsonArray().get(0).toString();
+//            return targetResult.substring(1,targetResult.length()-1);
+//        } catch (Exception e)
+//        {
+//            System.out.println("Err in TranslateCategoryJob.translate: " + e.getMessage());
+//            return null;
+//        }
+        return  targetLanguageCode.toUpperCase() + ": " +content.toUpperCase();
     }
 }

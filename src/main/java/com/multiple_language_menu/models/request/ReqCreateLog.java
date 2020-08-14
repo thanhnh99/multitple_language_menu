@@ -1,48 +1,49 @@
 package com.multiple_language_menu.models.request;
 
-import com.multiple_language_menu.enums.EActionType;
-import com.multiple_language_menu.enums.ETargetType;
+import com.multiple_language_menu.constants.EActionType;
+import com.multiple_language_menu.constants.ETargetType;
 import com.multiple_language_menu.models.entities.Categories;
-import com.multiple_language_menu.models.entities.CategoriesTranslates;
 import com.multiple_language_menu.models.entities.Items;
+import com.multiple_language_menu.models.entities.Shops;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 public class ReqCreateLog {
-    private String target;
+    private String targetId;
+    private String targetName;
     private ETargetType targetType ;
-    private String action;
     private EActionType actionType;
     private String shopId;
 
 
-    public ReqCreateLog(CategoriesTranslates categoriesTranslates)
+    public ReqCreateLog(Categories category, EActionType actionType)
     {
-        this.target = categoriesTranslates.getCategory().getName();
+        this.targetId  = category.getId();
+        this.targetName = category.getName();
         this.targetType = ETargetType.CATEGORY;
-        this.action = "dich";
-        this.actionType = EActionType.TRANSLATE;
-        this.shopId = categoriesTranslates.getCategory().getShop().getId();
-    }
-
-    public ReqCreateLog(Categories category)
-    {
-        this.target = category.getName();
-        this.targetType = ETargetType.CATEGORY;
-        this.action = "TRANSLATE";
-        this.actionType = EActionType.TRANSLATE;
+        this.actionType = actionType;
         this.shopId = category.getShop().getId();
     }
 
-    public ReqCreateLog(Items items)
+
+    public ReqCreateLog(Items items, EActionType actionType)
     {
-        this.target = items.getName();
+        this.targetId = items.getId();
+        this.targetName = items.getName() ;
         this.targetType = ETargetType.CATEGORY;
-        this.action = "TRANSLATE";
-        this.actionType = EActionType.TRANSLATE;
+        this.actionType = actionType;
         this.shopId = items.getCategory().getShop().getId();
+    }
+
+    public ReqCreateLog(Shops shops, EActionType actionType)
+    {
+        this.targetId = shops.getId();
+        this.targetName = shops.getName();
+        this.targetType = ETargetType.SHOP;
+        this.actionType = actionType;
+        this.shopId = shops.getId();
     }
 
 }

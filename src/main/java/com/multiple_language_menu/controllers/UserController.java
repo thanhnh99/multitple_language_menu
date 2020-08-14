@@ -2,6 +2,7 @@ package com.multiple_language_menu.controllers;
 
 import com.multiple_language_menu.models.request.ReqCreateAdmin;
 import com.multiple_language_menu.models.responses.dataResponse.ResCreateManager;
+import com.multiple_language_menu.models.responses.dataResponse.ResUser;
 import com.multiple_language_menu.models.responses.httpResponse.HttpResponse;
 import com.multiple_language_menu.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("user")
@@ -67,6 +70,24 @@ public class UserController {
         }
         response.setStatusCode("400");
         response.setMessage("bad request");
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<HttpResponse> getUser(HttpServletRequest httpRequest)
+    {
+        HttpResponse response = new HttpResponse();
+        List<ResUser> responseData = new ArrayList<>();
+        if(userService.getUsers(httpRequest) != null)
+        {
+            response.setStatusCode("200");
+            response.setMessage("success");
+            response.setData(responseData);
+            return ResponseEntity.ok(response);
+        }
+        response.setStatusCode("400");
+        response.setMessage("bad request");
+        response.setData(null);
         return ResponseEntity.ok(response);
     }
 }

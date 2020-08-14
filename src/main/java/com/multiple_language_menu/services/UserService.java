@@ -1,21 +1,20 @@
 package com.multiple_language_menu.services;
 
+import com.multiple_language_menu.constants.RoleConstant;
 import com.multiple_language_menu.filters.JwtTokenProvider;
 import com.multiple_language_menu.models.auth.CustomUserDetail;
 import com.multiple_language_menu.models.entities.Roles;
 import com.multiple_language_menu.models.entities.Users;
 import com.multiple_language_menu.models.request.ReqCreateAdmin;
-import com.multiple_language_menu.models.request.ReqCreateShop;
 import com.multiple_language_menu.models.request.ReqLogin;
 import com.multiple_language_menu.models.responses.dataResponse.ResLogin;
+import com.multiple_language_menu.models.responses.dataResponse.ResUser;
 import com.multiple_language_menu.repositories.IRoleRepository;
 import com.multiple_language_menu.repositories.IUserRepository;
 import com.multiple_language_menu.services.authorize.AttributeTokenService;
-import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -94,11 +93,11 @@ public class UserService implements UserDetailsService {
         try {
             String userRequestName = AttributeTokenService.getUsernameFromToken(token);
             Users requestUser = userRepository.findByUsername(userRequestName);
-            boolean checkPermission = AttributeTokenService.checkAccess(token,"admin") || AttributeTokenService.checkAccess(token,"root");
-            boolean checkuserexist = this.checkUserExisted(requestData.getUserName());
-            if(checkPermission && !checkuserexist)
+            boolean checkPermission = AttributeTokenService.checkAccess(token,RoleConstant.ADMIN) || AttributeTokenService.checkAccess(token,RoleConstant.ROOT);
+            boolean checkUserExist = this.checkUserExisted(requestData.getUserName());
+            if(checkPermission && !checkUserExist)
             {
-                Roles role = roleRepository.findByCode("manager");
+                Roles role = roleRepository.findByCode(RoleConstant.MANAGER);
                 Users manager = new Users(requestData.getUserName(),
                         passwordEncoder.encode(requestData.getPassword()),
                         requestData.getEmail(),
@@ -125,10 +124,10 @@ public class UserService implements UserDetailsService {
         try {
             String userRequestName = AttributeTokenService.getUsernameFromToken(token);
             Users requestUser = userRepository.findByUsername(userRequestName);
-            if(AttributeTokenService.checkAccess(token,"root")&&
+            if(AttributeTokenService.checkAccess(token,RoleConstant.ROOT)&&
                     userRepository.findByUsername(requestData.getUserName()) == null)
             {
-                Roles role = roleRepository.findByCode("admin");
+                Roles role = roleRepository.findByCode(RoleConstant.ADMIN);
                 Users admin = new Users(requestData.getUserName(),
                         requestData.getPassword(),
                         requestData.getEmail(),
@@ -158,11 +157,11 @@ public class UserService implements UserDetailsService {
             Users userRequest = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
             boolean checkAcess = false;
 
-            if(AttributeTokenService.checkAccess(token, "root"))
+            if(AttributeTokenService.checkAccess(token, RoleConstant.ROOT))
             {
                 checkAcess = true;
             }
-            else if(AttributeTokenService.checkAccess(token, "admin"))
+            else if(AttributeTokenService.checkAccess(token, RoleConstant.ADMIN))
             {
                 if(loginEnableUser.getCreatedBy().equals(userRequest.getId()));
                 {
@@ -184,6 +183,29 @@ public class UserService implements UserDetailsService {
             return false;
         }
 
+    }
+
+    public List<ResUser> getUsers(HttpServletRequest httpRequest)
+    {
+        try {
+            String token = httpRequest.getHeader("Authorization");
+            List<ResUser> resUsers = new ArrayList<>();
+            if(AttributeTokenService.checkAccess(token, RoleConstant.ROOT))
+            {
+                List<Users> users = userRepository.findAll();
+                for (Users user : users)
+                {
+                    ResUser resUser = new ResUser(user);
+                    resUsers.add(resUser);
+                }
+                return resUsers;
+            }
+            return null;
+        }catch (Exception e)
+        {
+            System.out.println("Err in UserService.getUsers: " + e.getMessage());
+            return null;
+        }
     }
 
     @Override

@@ -7,6 +7,8 @@ import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.Random;
+
 @Service
 public class LogProcess {
 
@@ -20,18 +22,24 @@ public class LogProcess {
     public void createLog(ReqCreateLog requestData,
                           IShopRepository shopRepository,
                           ILogRepository logRepository) throws SchedulerException {
-        String identity = "create-log-for-shop_" + requestData.getShopId() + "-" + System.currentTimeMillis();
+        String identity = "create-log-for-shop_" + requestData.getShopId() +
+                "with targetId: " + requestData.getTargetId() +
+                "with targetName: " + requestData.getTargetName() +
+                ", targetType: " + requestData.getTargetType() +
+                ", actionType: " + requestData.getActionType() +
+                ", shopId: " + requestData.getShopId() +
+                System.currentTimeMillis();
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put("data", requestData);
         jobDataMap.put("shopRepository", shopRepository);
         jobDataMap.put("logRepository", logRepository);
         JobDetail job = JobBuilder.newJob(LogJob.class)
-                .withIdentity(identity)
+//                .withIdentity(identity)
                 .withDescription("Create log")
                 .usingJobData(jobDataMap)
                 .build();
         Trigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(identity)
+//                .withIdentity(identity)
                 .startNow()
                 .build();
         scheduler.start();

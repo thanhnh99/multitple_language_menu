@@ -100,5 +100,14 @@ public class Shops extends BaseEntity{
         return paymentMethod;
     }
 
+    public List<String> getLanguageCodes()
+    {
+        List<String> languageCodes = new ArrayList<String>();
+        for (Languages language : this.getLanguages())
+        {
+            languageCodes.add(language.getCode());
+        }
+        return languageCodes;
+    }
 
 }

@@ -1,6 +1,6 @@
 package com.multiple_language_menu.configs;
 
-import com.multiple_language_menu.enums.MailConstants;
+import com.multiple_language_menu.constants.MailConstants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;

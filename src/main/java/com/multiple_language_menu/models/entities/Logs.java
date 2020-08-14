@@ -1,23 +1,22 @@
 package com.multiple_language_menu.models.entities;
 
-import com.multiple_language_menu.enums.EActionType;
-import com.multiple_language_menu.enums.ETargetType;
+import com.multiple_language_menu.constants.EActionType;
+import com.multiple_language_menu.constants.ETargetType;
 import com.multiple_language_menu.models.request.ReqCreateLog;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.util.UUID;
 
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Logs extends BaseEntity{
-    private String target;
+    private String targetId;
+    private String targetName;
     private ETargetType targetType ;
-    private String action;
     private EActionType actionType;
 
     @ManyToOne
@@ -26,9 +25,9 @@ public class Logs extends BaseEntity{
 
     public Logs(ReqCreateLog requestData)
     {
-        this.target = requestData.getTarget();
+        this.targetId = requestData.getTargetId();
+        this.targetName = requestData.getTargetName();
         this.targetType = requestData.getTargetType();
-        this.action = requestData.getAction();
         this.actionType = requestData.getActionType();
     }
 }

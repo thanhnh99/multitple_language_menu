@@ -22,12 +22,12 @@ public class MailProcess {
         jobDataMap.put("data", requestData);
         jobDataMap.put("emailSender", emailSender);
         JobDetail job = JobBuilder.newJob(MailJob.class)
-                .withIdentity(identity)
+//                .withIdentity(identity)
                 .withDescription("Send notification email: translated")
                 .usingJobData(jobDataMap)
                 .build();
         Trigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(identity)
+//                .withIdentity(identity)
                 .startNow()
                 .build();
         scheduler.start();

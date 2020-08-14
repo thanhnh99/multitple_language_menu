@@ -1,13 +1,16 @@
 package com.multiple_language_menu.services;
 
+import com.multiple_language_menu.constants.EActionType;
+import com.multiple_language_menu.constants.RoleConstant;
+import com.multiple_language_menu.job.LogProcess;
 import com.multiple_language_menu.job.TranslateProcess;
 import com.multiple_language_menu.models.entities.Categories;
 import com.multiple_language_menu.models.entities.Items;
 import com.multiple_language_menu.models.entities.Users;
 import com.multiple_language_menu.models.request.ReqCreateItem;
 import com.multiple_language_menu.models.request.ReqCreateItemFromCSV;
+import com.multiple_language_menu.models.request.ReqCreateLog;
 import com.multiple_language_menu.models.request.ReqEditItem;
-import com.multiple_language_menu.models.responses.dataResponse.ResCategory;
 import com.multiple_language_menu.repositories.*;
 import com.multiple_language_menu.services.authorize.AttributeTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +20,6 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ItemService {
@@ -47,28 +49,44 @@ public class ItemService {
 
     @Autowired
     CategoryService categoryService;
+
+    @Autowired
+    LogProcess logProcess;
+
     public Boolean createItem(HttpServletRequest httpRequest, ReqCreateItem requestData)
     {
         try {
             String token = httpRequest.getHeader("Authorization");
             Categories category = categoryRepository.getOne(requestData.getCategoryId());
-            if(!category.getShop().getOwner().getEnable() || category.getChildCategory().size() > 0)
+            if(!category.getShop().getOwner().getEnable() ||
+                    category.getChildCategory().size() > 0 ||
+                    category == null
+            )
             {
                 return false;
             }
             Users manager = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
             //check access
-            if(AttributeTokenService.checkAccess(token,"manager") &&
+            if(AttributeTokenService.checkAccess(token, RoleConstant.MANAGER) &&
                     manager.getId().equals(category.getShop().getOwner().getId()))
             {
                 Items newItem = new Items(requestData);
                 newItem.setCategory(category);
                 newItem.setRank(category.getItems().size());
+                newItem.setCreatedBy(manager.getId());
                 if(requestData instanceof ReqCreateItemFromCSV)
                 {
-                    newItem.setId(((ReqCreateItemFromCSV) requestData).getCode());
+                    newItem.setId(((ReqCreateItemFromCSV) requestData).getCode() + category.getId());
                 }
                 itemRepository.save(newItem);
+                category.getItems().add(newItem);
+                category.setItems(category.getItems());
+                categoryRepository.save(category);
+
+                logProcess.createLog(new ReqCreateLog(newItem, EActionType.ADD),
+                        shopRepository,
+                        logRepository);
+
                 translateProcess.translateItem(newItem,
                         itemTranslateRepository,
                         shopRepository,
@@ -94,15 +112,15 @@ public class ItemService {
                 Boolean checkAccess = false;
                 for (String itemUpdateId : (List<String>) requestData.getItemIds()) {
                     Items itemUpdate = itemRepository.findById(itemUpdateId).get();
-                    if (AttributeTokenService.checkAccess(token, "root")
-                            || (AttributeTokenService.checkAccess(token, "manager") &&
+                    if (AttributeTokenService.checkAccess(token, RoleConstant.ROOT)
+                            || (AttributeTokenService.checkAccess(token, RoleConstant.MANAGER) &&
                             user.getId().equals(itemUpdate.getCategory().getShop().getOwner().getId()))) {
                         checkAccess = true;
-                        if (checkAccess == false) break;
                     }
                     else {
                         checkAccess = false;
                     }
+                    if (checkAccess == false) break;
                 }
                 if(checkAccess == true)
                 {
@@ -122,8 +140,8 @@ public class ItemService {
             } else if (requestData.getItemIds() instanceof String) {
                 //update data
                 Items updateItem = itemRepository.findById((String) requestData.getItemIds()).get();
-                if (AttributeTokenService.checkAccess(token, "root")
-                        || (AttributeTokenService.checkAccess(token, "manager") &&
+                if (AttributeTokenService.checkAccess(token, RoleConstant.ROOT)
+                        || (AttributeTokenService.checkAccess(token, RoleConstant.MANAGER) &&
                         user.getId().equals(updateItem.getCategory().getShop().getOwner().getId()))) {
                     updateItem.setName(requestData.getItemName());
                     updateItem.setDescription(requestData.getDescription());
@@ -168,8 +186,8 @@ public class ItemService {
             String token = httpRequest.getHeader("Authorization");
             Boolean checkAccess = false;
             Users user = userRepository.findByUsername(AttributeTokenService.getUsernameFromToken(token));
-            if(AttributeTokenService.checkAccess(token,"root") ||
-                    (AttributeTokenService.checkAccess(token,"manager") &&
+            if(AttributeTokenService.checkAccess(token,RoleConstant.ROOT) ||
+                    (AttributeTokenService.checkAccess(token,RoleConstant.MANAGER) &&
                             user.getId().equals(item.getCreatedBy()))
             )
             {
@@ -181,6 +199,9 @@ public class ItemService {
             if(checkAccess)
             {
                 itemRepository.delete(item);
+                logProcess.createLog(new ReqCreateLog(item, EActionType.DELETE),
+                        shopRepository,
+                        logRepository);
                 return true;
             }
             return false;
