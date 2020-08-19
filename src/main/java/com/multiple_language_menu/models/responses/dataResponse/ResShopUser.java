@@ -21,8 +21,9 @@ public class ResShopUser {
     private  String coverImage;
     private String description;
     private String averagePrice;
-
-
+    private String address;
+    private String phone;
+    
     public ResShopUser(Shops shop)
     {
         this.shopName = shop.getName();
@@ -37,5 +38,7 @@ public class ResShopUser {
         this.description = shop.getDescription();
         this.website = shop.getWebsite();
         this.averagePrice = shop.getAveragePrice().toString();
+        this.address = shop.getAddress();
+        this.phone = shop.getPhone();
     }
 }
