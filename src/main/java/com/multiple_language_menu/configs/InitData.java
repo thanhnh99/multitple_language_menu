@@ -131,6 +131,17 @@ public class InitData {
                 System.out.println("ERR: " + e.getMessage());
             }
         }
+
+        if(paymentRepository.findByCode("by_visa") == null)
+        {
+            try {
+                Payments cashPay = new Payments("Thanh toan the Visa", "by_visa", new ArrayList<Shops>());
+                paymentRepository.save(cashPay);
+            } catch (Exception e)
+            {
+                System.out.println("ERR: " + e.getMessage());
+            }
+        }
     }
 
 
