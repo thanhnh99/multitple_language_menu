@@ -79,7 +79,10 @@ public class ShopService {
                     for(String paymentCode : requestData.getPaymentMethod())
                     {
                         Payments payment = paymentRepository.findByCode(paymentCode);
-                        payments.add(payment);
+                        if(payment != null)
+                        {
+                            payments.add(payment);
+                        }
                     }
                     //create shop
                     Shops shop = new Shops(requestData.getShopName(),
@@ -104,6 +107,15 @@ public class ShopService {
                     shop.setLanguages(new ArrayList<>());
                     shop.setCreatedBy(manager.getCreatedBy());
                     shopRepository.save(shop);
+                    for(String paymentCode : requestData.getPaymentMethod())
+                    {
+                        Payments payment = paymentRepository.findByCode(paymentCode);
+                        if(payment != null)
+                        {
+                            payment.addShop(shop);
+                            paymentRepository.save(payment);
+                        }
+                    }
                     languageService.addDefaultLanguage(shop.getId());
 
                     //Create log

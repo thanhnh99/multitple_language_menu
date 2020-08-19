@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,7 +25,8 @@ public class ResShopUser {
     private String averagePrice;
     private String address;
     private String phone;
-    
+    private List<String> paymentMethod;
+
     public ResShopUser(Shops shop)
     {
         this.shopName = shop.getName();
@@ -40,5 +43,6 @@ public class ResShopUser {
         this.averagePrice = shop.getAveragePrice().toString();
         this.address = shop.getAddress();
         this.phone = shop.getPhone();
+        this.paymentMethod = shop.getPaymentMethod();
     }
 }
