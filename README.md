@@ -13,6 +13,6 @@ Install project:
 6. Run project with Application.java file
 7. Note: require lombok plugin in IntelliJ.
 
-Link doc API: https://1drv.ms/x/s!AtauqPFMuRDCgYYNP3o3WY3vKFY7lQ?e=kJFheE
+Link doc API: https://1drv.ms/x/s!AtauqPFMuRDCgaN5iT_3AXy3OZOsUQ?e=mb4iPA
 
 
